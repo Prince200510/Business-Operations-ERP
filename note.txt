@@ -3,7 +3,7 @@ postgresql://prince:1234@localhost:5432/business_operations
 docker compose stop
 docker compose start
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-
+docker run -d --name nexora-redis -p 6379:6379 redis:7
 
 url:
 Authentication
