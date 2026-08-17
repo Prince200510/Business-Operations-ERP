@@ -15,7 +15,12 @@ import Bussiness from './Bussiness.js';
 const Dashboard = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const username = location?.state?.userName;
+    
+    // Get username from location state OR from localStorage if navigated automatically
+    const loggedInUserStr = localStorage.getItem('loggedInUser');
+    const storedUser = loggedInUserStr ? JSON.parse(loggedInUserStr) : null;
+    const username = location?.state?.userName || (storedUser && storedUser.username);
+
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isDropdownOpen1, setIsDropdownOpen1] = useState(false);
 
@@ -58,12 +63,17 @@ const Dashboard = () => {
     }
 
 
-    if (!username) {
-        return <Navigate to="/login" />;
+    if (!location.state || !location.state.userName) {
+        if (storedUser && storedUser.username) {
+            return <Navigate to="/Dashboard" state={{ userName: storedUser.username }} replace />;
+        } else {
+            return <Navigate to="/" replace />;
+        }
     }
 
     const handleLogout = () => {
-        localStorage.removeItem('loggedInUser'); // Remove saved credentials from local storage
+        localStorage.removeItem('loggedInUser');
+        localStorage.removeItem('access_token');
         navigate('/');
       };
     return (

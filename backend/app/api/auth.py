@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.redis import get_redis
-from app.core.security import (hash_password, verify_password)
+from app.core.security import (hash_password, verify_password, create_access_token)
 from app.modules.user import User
 from app.schemas.auth import (Register, Login)
 
@@ -60,8 +60,15 @@ def login(request: Login, db: Session = Depends(get_db)):
     
     redis.delete(attempts_key)
     
+    access_token = create_access_token(data = {
+        "sub": str(user.id),
+        "username": user.username
+    })
+    
     return {
         "message": "Login successful",
+        "access_token": access_token,
+        "token_type": "bearer",
         "user": {
             "id": user.id,
             "name": user.name,

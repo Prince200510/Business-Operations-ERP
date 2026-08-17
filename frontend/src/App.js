@@ -3,6 +3,7 @@ import Dashboard from './Dashboard';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Route, Routes } from 'react-router-dom';
 import Forgetpass from './Forgetpass';
+import ProtectedRoute from './ProtectedRoute';
 
 function App() {
   const [name, setName] = useState('');
@@ -21,7 +22,13 @@ function App() {
   useEffect(() => {
     generatePassword();
   }, []);
-  
+
+  useEffect(() => {
+    const token = localStorage.getItem('access_token');
+    if (token && location.pathname === '/') {
+      navigate('/Dashboard');
+    }
+  }, [navigate, location.pathname]);  
 
   const generatePassword = () => {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
@@ -82,6 +89,7 @@ function App() {
         return;
       }
 
+      localStorage.setItem('access_token', data.access_token);
       localStorage.setItem('loggedInUser', JSON.stringify(data.user));
       setSuccessMessage('Login Successful');
       navigate('/Dashboard', {
@@ -221,7 +229,9 @@ function App() {
       )}
       <Routes>
         <Route path="/" element={<></>} />
-        <Route path="/Dashboard" element={<Dashboard />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/Dashboard" element={<Dashboard />} />
+        </Route>
         <Route path="/Forgetpass" element={<Forgetpass />} />
       </Routes>
     </>
