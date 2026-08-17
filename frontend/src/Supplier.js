@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { AiOutlineDelete } from 'react-icons/ai';
-import database from './firebase';
-import { ref, push, onValue, remove, child, set, get, orderByChild, exists, forEachChild, val} from 'firebase/database';
 import Swal from 'sweetalert2'
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const Supplier = () => {
     const location = useLocation();
+    const navigate = useNavigate();
     const { userName } = location.state; 
     const [suppliers, setSuppliers] = useState([]);
     const [newSupplier, setNewSupplier] = useState({
@@ -16,17 +15,49 @@ const Supplier = () => {
         address: ''
     });
 
-    useEffect(() => {
-        const suppliersRef = ref(database, `${userName}suppliers`);
-        onValue(suppliersRef, (snapshot) => {
-            if (snapshot.exists()) {
-                const data = snapshot.val();
-                const suppliersArray = Object.values(data);
-                setSuppliers(suppliersArray);
-            } else {
-                setSuppliers([]);
+    const API_URL = process.env.REACT_APP_API_URL;
+
+    const fetch_supplier = async () => {
+        const token = localStorage.getItem('access_token');
+
+        if(!token) {
+            navigate('/');
+            return;
+        }
+
+        try {
+            const response = await fetch( `${API_URL}/suppliers/`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            if(response.status === 401) {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('loggedInUser');
+                navigate('/');
+                return;
             }
-        });
+
+            const data = await response.json();
+
+            if(!response.ok) {
+                throw new Error(data.detail || 'Failed to fetch suppliers');
+            }
+
+            setSuppliers(data);
+        } catch(error) {
+            console.error(error);
+            Swal.fire({title: 'Error!', text: 'Unable to load suppliers.', icon: 'error'});
+        }
+    };
+
+    useEffect(() => {
+        fetch_supplier();
     }, []);
 
     const handleInputChange = (e) => {
@@ -34,55 +65,124 @@ const Supplier = () => {
         setNewSupplier({ ...newSupplier, [name]: value });
     };
 
-    const handleNewSupplierSubmit = () => {
+    const handleNewSupplierSubmit = async () => {
         if (!newSupplier.name || !newSupplier.email || !newSupplier.phoneNumber || !newSupplier.address) {
-            alert("Please fill out all fields");
+            // alert("Please fill out all fields");
+            Swal.fire({title: 'Missing information', text: 'Please fill out all fields.', icon: 'warning'});
             return;
         }
-        const suppliersRef = ref(database, `${userName}suppliers`);
-        const newSupplierRef = push(suppliersRef);
-        const newSupplierKey = newSupplierRef.key;
-        const supplierData = {
-            name: newSupplier.name,
-            email: newSupplier.email,
-            phoneNumber: newSupplier.phoneNumber,
-            address: newSupplier.address
-        };
-        const supplierNameRef = ref(database, `${userName}suppliers/` + newSupplier.name);
-        set(supplierNameRef, supplierData);
-        setNewSupplier({
-            name: '',
-            email: '',
-            phoneNumber: '',
-            address: ''
-        });
+
+        const token = localStorage.getItem('access_token');
+
+        if(!token) {
+            navigate('/');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/suppliers/`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    name: newSupplier.name,
+                    email: newSupplier.email,
+                    phone_number: newSupplier.phoneNumber,
+                    address: newSupplier.address
+                })
+            });
+
+            const data = await response.json();
+
+            if(response.status === 401) {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('loggedInUser');
+                navigate('/');
+                return;
+            }
+
+            if(!response.ok) {
+                throw new Error(data.detail || 'Failed to create supplier');
+            }
+
+            setSuppliers([...suppliers, data]);
+            setNewSupplier({
+                name: '',
+                email: '',
+                phoneNumber: '',
+                address: ''
+            });
+
+            Swal.fire({
+                title: 'Success!',
+                text: 'Supplier added successfully.',
+                icon: 'success'
+            });
+
+        } catch(error) {
+            console.log(error);
+            Swal.fire({
+                title: 'Error!',
+                text: error.message,
+                icon: 'error'
+            });
+        }
+       
     };
     
-    const handleDeleteSupplier = async (supplierName) => {
-        if (!supplierName) {
+    const handleDeleteSupplier = async (supplierId) => {
+        if (!supplierId) {
             console.error('Supplier name is not defined.');
             Swal.fire({
                 title: 'Error!',
-                text: 'Supplier name is not defined.',
+                text: 'Supplier Id is missing.',
                 icon: 'error',
-                confirmButtonText: 'Ok'
-              })
+              });
             return;
         }
+
+        const token = localStorage.getItem('access_item');
+
+        if(!token) {
+            navigate('/');
+            return;
+        }
+
         try {
-            const supplierRef = ref(database, `${userName}suppliers/` + supplierName);
-            await remove(supplierRef);
+            const response = await fetch(`${API_URL}/suppliers/${supplierId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const data = await response.json();
+
+            if(response.status === 401) {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('loggedInUser');
+                navigate('/');
+                return;
+            }
+
+            if(!response.ok) {
+                throw new Error(data.detail || 'Failed to delete supplier');
+            }
+
+            setSuppliers(suppliers.filter(supplier => supplier.id !== supplierId));
             Swal.fire({
-                title: "Supplier deatils have been deleted!",
-                icon: "success"
-              });
-        } catch (error) {
+                title: 'Supplier deleted !',
+                icon: 'success'
+            });
+        } catch(error) {
+            console.error(error);
             Swal.fire({
-                title: 'Error!',
-                text: error,
-                icon: 'error',
-                confirmButtonText: 'Cool'
-              })
+                title: 'Error !',
+                text: error.message,
+                icon: 'error'
+            });
         }
     };
     
