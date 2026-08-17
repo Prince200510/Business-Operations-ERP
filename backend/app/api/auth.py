@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.redis import get_redis
-from app.core.security import (hash, verify)
+from app.core.security import (hash_password, verify_password)
 from app.modules.user import User
 from app.schemas.auth import (Register, Login)
 
@@ -20,7 +20,7 @@ def register(request: Register, db: Session = Depends(get_db)):
     if existing_email:
         raise HTTPException(status_code=409, detail = "Email id already registered")
     
-    hashed_password = hash(request.password)
+    hashed_password = hash_password(request.password)
     user = User(
         name = request.name, 
         username = request.username,
@@ -52,7 +52,7 @@ def login(request: Login, db: Session = Depends(get_db)):
         
         raise HTTPException(status_code=401, detail = "Invaild Username")
     
-    if not verify(request.password, user.password_hash):
+    if not verify_password(request.password, user.password_hash):
         redis.incr(attempts_key)
         redis.expire(attempts_key, 300)
         

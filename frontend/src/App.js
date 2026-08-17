@@ -1,9 +1,7 @@
 import './App.css';
-import database from './firebase';
-import { ref, set, get } from "firebase/database";
 import Dashboard from './Dashboard';
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation, Route, Routes } from 'react-router-dom';
+import { useNavigate, useLocation, Route, Routes } from 'react-router-dom';
 import Forgetpass from './Forgetpass';
 
 function App() {
@@ -62,52 +60,45 @@ function App() {
       return;
     }
   
-    const userRef = ref(database, `login/${userName}`);
-    get(userRef)
-      .then((snapshot) => {
-        if (snapshot.exists()) {
-          const userData = snapshot.val();
-          if (userData.password === password) {
-            localStorage.setItem('loggedInUser', JSON.stringify({ userName, password }));
-            setSuccessMessage('Login successful!');
-            navigate('./Dashboard', { state: { userName } });
-            setUserName('');
-            setPassword('');
-            setErrorMessage('');
-            setSuccessMessage('');
-          } else {
-            setErrorMessage('Password is incorrect');
-          }
-        } else {
-          setErrorMessage('Username not found');
-          setUserName('');
-          setPassword('');
-        }
-      })
-      .catch((error) => {
-        console.error('Error logging in:', error);
-        setErrorMessage('Error logging in. Please try again later.');
+    try {
+      const response = await fetch(
+         `${process.env.REACT_APP_API_URL}/auth/login`,
+         {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            username: userName,
+            password: password,
+          }),
+         }
+      );
+
+      const data = await response.json();
+
+      if(!response.ok) {
+        setErrorMessage(data.detail || 'Login Failed');
+        return;
+      }
+
+      localStorage.setItem('loggedInUser', JSON.stringify(data.user));
+      setSuccessMessage('Login Successful');
+      navigate('/Dashboard', {
+        state: {
+          userName: data.user.username,
+        },
       });
-  };
-  
-  // Add this function to check if the user is already logged in when the component mounts
-  const checkLocalStorage = () => {
-    const loggedInUser = localStorage.getItem('loggedInUser');
-    if (loggedInUser) {
-      const { userName, password } = JSON.parse(loggedInUser);
-      setUserName(userName);
-      setPassword(password);
-      handleLogin(); // Automatically attempt login with saved credentials
+
+      setUserName('');
+      setPassword('');
+    } catch(error) {
+      console.log(error);
+      setErrorMessage('Unable to connect to server. Please try again later.');
     }
   };
-  
-  // Call the checkLocalStorage function when the component mounts
-  useEffect(() => {
-    checkLocalStorage();
-  }, []);
-  
 
-  const handleSignUp = () => {
+  const handleSignUp = async () => {
     setErrorMessage('');
     setSuccessMessage('');
   
@@ -122,47 +113,42 @@ function App() {
       return;
     }
 
-
-    const userRef = ref(database, `login/${userName}`);
-    get(userRef)
-      .then((snapshot) => {
-        if (snapshot.exists()) {
-          setErrorMessage('Username already exists');
-          setErrorMessage('');
-          setSuccessMessage('');
-          setUserName('');
-          setName('');
-          setPassword('');
-          setEmail('');
-          setMobile('');
-        } else {
-          const userData = {
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/auth/register`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
             name: name,
-            password: password,
+            username: userName,
             email: email,
             mobile: mobile,
-            passcode: generatedPassword
-          };
-          set(ref(database, `login/${userName}`), userData)
-            .then(() => {
-              setSuccessMessage('Registration successful! Please log in.');
-              setIsSignUp(false); 
-              setUserName('');
-              setName('');
-              setPassword('');
-              setEmail('');
-              setMobile('');
-            })
-            .catch((error) => {
-              console.error('Error registering user:', error);
-              setErrorMessage('Error registering user. Please try again later.');
-            });
+            password: password,
+          }),
         }
-      })
-      .catch((error) => {
-        console.error('Error checking username:', error);
-        setErrorMessage('Error checking username. Please try again later.');
-      });
+      );
+
+      const data = await response.json()
+
+      if(!response.ok) {
+        setErrorMessage(data.detail || 'Registration failed');
+        return;
+      }
+
+      setSuccessMessage('Registration successful! Please login.');
+      setName('');
+      setUserName('');
+      setPassword('');
+      setEmail('');
+      setMobile('');
+      setIsSignUp(false);
+    } catch(error) {
+      console.log(error);
+      setErrorMessage('Unable to connect to server. Please try again later.');
+    }
   };
   
   const handleSignIn = () => {
@@ -234,6 +220,7 @@ function App() {
         </div>
       )}
       <Routes>
+        <Route path="/" element={<></>} />
         <Route path="/Dashboard" element={<Dashboard />} />
         <Route path="/Forgetpass" element={<Forgetpass />} />
       </Routes>
