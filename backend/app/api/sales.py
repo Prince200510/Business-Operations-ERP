@@ -78,12 +78,12 @@ def create_sale_order(sale_data: SaleOrderCreate, db: Session = Depends(get_db),
     
     return sale_order
 
-@router.get("/")
+@router.get("/", response_model = list[SaleOrderResponse])
 def get_sales(db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
     sales = (db.query(SaleOrder).filter(SaleOrder.user_id == user_id).order_by(SaleOrder.id.desc()).all())
     return sales
 
-@router.get("/{sale_id}")
+@router.get("/{sale_id}", response_model = SaleOrderResponse)
 def get_sale(sale_id: int, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
     sale = (db.query(SaleOrder).filter(SaleOrder.id == sale_id, SaleOrder.user_id == user_id).first())
     

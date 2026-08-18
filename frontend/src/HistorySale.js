@@ -1,49 +1,99 @@
 import React, { useState, useEffect } from 'react';
 import { AiOutlineDelete } from 'react-icons/ai';
-import { Link } from 'react-router-dom';
-import database from './firebase';
-import { ref, get, onValue } from 'firebase/database';
-import { useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const HistorySale = () => {
+    const [sales, setSales] = useState([]);
     const [customers, setCustomers] = useState([]);
-    const [searchQuery, setSearchQuery] = useState('');
+    const [products, setProducts] = useState([]);
     const [selectedMonth, setSelectedMonth] = useState('all');
-    const location = useLocation();
-    const { userName } = location.state;
+    const navigate = useNavigate();
 
-    useEffect(() => {
-        const fetchCustomerData = () => {
-            const customerRef = ref(database, `${userName}Customers`);
-            onValue(customerRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    const customerList = Object.entries(snapshot.val()).map(([id, data]) => ({ id, ...data }));
-                    setCustomers(customerList);
-                } else {
-                    setCustomers([]);
-                }
+    const fetchCustomers = async () => {
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/customers/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
             });
-        };
-        
-        fetchCustomerData();
-    }, []);
-
-    const calculateProfit = (product) => {
-        return (product.quantity * (parseFloat(product.salePrice) - parseFloat(product.purchasePrice))).toFixed(2);
+            if (response.ok) {
+                const data = await response.json();
+                setCustomers(data);
+            }
+        } catch (error) {
+            console.error('Failed to fetch customers', error);
+        }
     };
 
-    const filterCustomersByMonth = (customerList, month) => {
+    const fetchProducts = async () => {
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/products/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setProducts(data);
+            }
+        } catch (error) {
+            console.error('Failed to fetch products', error);
+        }
+    };
+
+    const fetchSales = async () => {
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/sales/`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.status === 401) {
+                localStorage.removeItem("access_token");
+                navigate('/');
+                return;
+            }
+
+            if (response.ok) {
+                const data = await response.json();
+                setSales(data);
+            } else {
+                console.error('Failed to fetch sales history');
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    useEffect(() => {
+        fetchCustomers();
+        fetchProducts();
+        fetchSales();
+    }, []);
+
+    const filterSalesByMonth = (salesList, month) => {
         if (month === 'all') {
-            return customerList;
+            return salesList;
         } else {
-            return customerList.filter(customer => {
-                const customerDate = new Date(customer.date);
-                return customerDate.getMonth() + 1 === parseInt(month);
+            return salesList.filter(sale => {
+                const saleDate = new Date(sale.created_at);
+                return saleDate.getMonth() + 1 === parseInt(month);
             });
         }
     };
 
-    const filteredCustomers = filterCustomersByMonth(customers, selectedMonth);
+    const filteredSales = filterSalesByMonth(sales, selectedMonth);
+
+    const getCustomerName = (customerId) => {
+        const cust = customers.find(c => c.id === customerId);
+        return cust ? cust.name : `Unknown (ID: ${customerId})`;
+    };
+
+    const getProductName = (productId) => {
+        const prod = products.find(p => p.id === productId);
+        return prod ? prod.name : `Unknown (ID: ${productId})`;
+    };
 
     return (
         <div className="flex-1 overflow-y-auto p-container-margin w-full bg-background font-body-md text-on-background">
@@ -82,21 +132,21 @@ const HistorySale = () => {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {filteredCustomers.length > 0 ? (
-                                filteredCustomers.map((customer, index) => (
-                                    <tr key={index} className="hover:bg-gray-50/50 transition-colors">
-                                        <td className="px-6 py-4 text-gray-600 font-medium">#{index + 1}</td>
+                            {filteredSales.length > 0 ? (
+                                filteredSales.map((sale) => (
+                                    <tr key={sale.id} className="hover:bg-gray-50/50 transition-colors">
+                                        <td className="px-6 py-4 text-gray-600 font-medium">#{sale.id}</td>
                                         <td className="px-6 py-4">
-                                            <div className="font-medium text-gray-900">{customer.customerName}</div>
-                                            <div className="text-xs text-gray-500">by {customer.username}</div>
+                                            <div className="font-medium text-gray-900">{getCustomerName(sale.customer_id)}</div>
+                                            <div className="text-xs text-gray-500">{sale.payment_method}</div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            {customer.products && customer.products.length > 0 ? (
+                                            {sale.items && sale.items.length > 0 ? (
                                                 <ul className="space-y-1">
-                                                    {customer.products.map((product, idx) => (
+                                                    {sale.items.map((item, idx) => (
                                                         <li key={idx} className="text-gray-600 flex justify-between gap-4">
-                                                            <span>• {product.productName}</span>
-                                                            <span className="font-medium text-gray-900">x{product.quantity}</span>
+                                                            <span>• {getProductName(item.product_id)}</span>
+                                                            <span className="font-medium text-gray-900">x{item.quantity}</span>
                                                         </li>
                                                     ))}
                                                 </ul>
@@ -104,16 +154,18 @@ const HistorySale = () => {
                                                 <span className="text-gray-400 italic">No products</span>
                                             )}
                                         </td>
-                                        <td className="px-6 py-4 text-gray-600">{customer.date}</td>
+                                        <td className="px-6 py-4 text-gray-600">
+                                            {new Date(sale.created_at).toLocaleDateString()}
+                                        </td>
                                         <td className="px-6 py-4">
-                                            <div className="text-xs text-gray-500">CGST: <span className="font-medium text-gray-700">₹{customer.cgst}</span></div>
-                                            <div className="text-xs text-gray-500">SGST: <span className="font-medium text-gray-700">₹{customer.sgst}</span></div>
+                                            <div className="text-xs text-gray-500">CGST: <span className="font-medium text-gray-700">₹{parseFloat(sale.cgst).toFixed(2)}</span></div>
+                                            <div className="text-xs text-gray-500">SGST: <span className="font-medium text-gray-700">₹{parseFloat(sale.sgst).toFixed(2)}</span></div>
                                         </td>
                                         <td className="px-6 py-4 text-red-500 font-medium">
-                                            {customer.discount > 0 ? `-₹${customer.discount}` : '₹0.00'}
+                                            {sale.discount > 0 ? `-₹${parseFloat(sale.discount).toFixed(2)}` : '₹0.00'}
                                         </td>
                                         <td className="px-6 py-4 text-right font-bold text-gray-900">
-                                            ₹{customer.finalTotal}
+                                            ₹{parseFloat(sale.final_total).toFixed(2)}
                                         </td>
                                     </tr>
                                 ))
