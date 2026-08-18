@@ -187,67 +187,127 @@ const Supplier = () => {
     };
     
     return (
-        <>
-            <h1 class="supplier">Suppliers</h1>
-            <div class="supplier-container">
-                <div class="parent-supplier">
-                    <h3>Supplier Details</h3>
-                    <hr></hr>
-                    <div class="new-supplier-entry">
-                        <div class="data">
-                            <label>Name</label><br></br>
-                            <input type="text" placeholder="Enter name" name="name" value={newSupplier.name} onChange={handleInputChange}></input>
+        <div className="w-full">
+            <div className="mb-6 flex justify-between items-center">
+                <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Suppliers Management</h2>
+                    <p className="text-gray-500 mt-1">Manage your suppliers, contacts, and vendor details</p>
+                </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                    <h3 className="text-lg font-semibold text-gray-800">Add New Supplier</h3>
+                </div>
+                <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                        <div className="space-y-1.5">
+                            <label className="block text-sm font-medium text-gray-700">Company / Name <span className="text-red-500">*</span></label>
+                            <input 
+                                type="text" 
+                                placeholder="E.g., Acme Corp" 
+                                name="name" 
+                                value={newSupplier.name} 
+                                onChange={handleInputChange}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm"
+                            />
                         </div>
-                        <div class="data">
-                            <label>Email</label><br></br>
-                            <input type="text" placeholder="Enter email" name="email" value={newSupplier.email} onChange={handleInputChange}></input>
+                        <div className="space-y-1.5">
+                            <label className="block text-sm font-medium text-gray-700">Email Address <span className="text-red-500">*</span></label>
+                            <input 
+                                type="email" 
+                                placeholder="contact@supplier.com" 
+                                name="email" 
+                                value={newSupplier.email} 
+                                onChange={handleInputChange}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm"
+                            />
                         </div>
-                        <div class="data">
-                            <label>Phone Number</label><br></br>
-                            <input type="text" placeholder="Enter phone number" name="phoneNumber" value={newSupplier.phoneNumber} onChange={handleInputChange}></input>
+                        <div className="space-y-1.5">
+                            <label className="block text-sm font-medium text-gray-700">Phone Number <span className="text-red-500">*</span></label>
+                            <input 
+                                type="text" 
+                                placeholder="+1 234 567 890" 
+                                name="phoneNumber" 
+                                value={newSupplier.phoneNumber} 
+                                onChange={handleInputChange}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm"
+                            />
                         </div>
-                        <div class="data">
-                            <label>Address</label><br></br>
-                            <input type="text" placeholder="Enter address" name="address" value={newSupplier.address} onChange={handleInputChange}></input>
+                        <div className="space-y-1.5">
+                            <label className="block text-sm font-medium text-gray-700">Physical Address <span className="text-red-500">*</span></label>
+                            <input 
+                                type="text" 
+                                placeholder="123 Business Rd" 
+                                name="address" 
+                                value={newSupplier.address} 
+                                onChange={handleInputChange}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm"
+                            />
                         </div>
-                        <div class="data">
-                            <label></label><br></br>
-                            <button onClick={handleNewSupplierSubmit}>New Supplier</button>
-                        </div>
+                    </div>
+                    <div className="mt-6 flex justify-end">
+                        <button 
+                            onClick={handleNewSupplierSubmit}
+                            className="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg shadow-sm transition-colors text-sm"
+                        >
+                            Save Supplier
+                        </button>
                     </div>
                 </div>
             </div>
-            <div class="supplier-data-show">
-                <table class="supplier-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Phone Number</th>
-                            <th>Address</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {suppliers.map((supplier, index) => (
-                        <tr key={index}>
-                            <td>{index + 1}</td>
-                            <td>{supplier.name}</td>
-                            <td>{supplier.email}</td>
-                            <td>{supplier.phone_number}</td>
-                            <td>{supplier.address}</td>
-                            <td>
-                                <button onClick={() => handleDeleteSupplier(supplier.id)}>
-                                    <AiOutlineDelete className="delete" />
-                                </button>
-                            </td>
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                    <h3 className="text-lg font-semibold text-gray-800">Supplier Directory</h3>
+                </div>
+                
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left whitespace-nowrap">
+                        <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100">
+                            <tr>
+                                <th className="px-6 py-4 font-semibold">ID</th>
+                                <th className="px-6 py-4 font-semibold">Name / Company</th>
+                                <th className="px-6 py-4 font-semibold">Contact Email</th>
+                                <th className="px-6 py-4 font-semibold">Phone Number</th>
+                                <th className="px-6 py-4 font-semibold">Address</th>
+                                <th className="px-6 py-4 font-semibold text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {suppliers.length > 0 ? (
+                                suppliers.map((supplier, index) => (
+                                    <tr key={index} className="hover:bg-gray-50/50 transition-colors">
+                                        <td className="px-6 py-4 font-medium text-gray-900">{index + 1}</td>
+                                        <td className="px-6 py-4 font-medium text-gray-900">{supplier.name}</td>
+                                        <td className="px-6 py-4 text-blue-600 hover:text-blue-800">
+                                            <a href={`mailto:${supplier.email}`}>{supplier.email}</a>
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-600">{supplier.phone_number}</td>
+                                        <td className="px-6 py-4 text-gray-600">{supplier.address}</td>
+                                        <td className="px-6 py-4 text-center">
+                                            <button 
+                                                onClick={() => handleDeleteSupplier(supplier.id)}
+                                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors inline-flex justify-center"
+                                                title="Delete Supplier"
+                                            >
+                                                <AiOutlineDelete className="text-lg" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                                        No suppliers registered yet. Add a supplier to get started.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </>
+        </div>
     );
 };
 

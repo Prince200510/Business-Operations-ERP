@@ -4,7 +4,6 @@ import database from './firebase';
 import { ref, onValue, update, get, push, set } from 'firebase/database';
 import Swal from 'sweetalert2';
 import { useLocation, useNavigate, Link, Route, Routes, Outlet } from 'react-router-dom';
-import './Dashboard.css';
 import Bill from './Bill';
 
 const NewSale = () => {
@@ -255,93 +254,183 @@ const NewSale = () => {
     };
     
     return (
-        <>
-    
-        <h1 className="supplier"><span>Sale</span>Order</h1>
-        <div className="supplier-container">
-            <div class="newsale-container">
-                <div className="parent-purchase-product">
-                    <div className="child-purchase-product">
-                        <label>Customer Name</label><br />
-                        <input type="text" placeholder='Enter customer name' value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
+        <div className="w-full">
+            {showContent && (
+                <>
+                    <div className="mb-6 flex justify-between items-center">
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-900">Create Sale Order</h2>
+                            <p className="text-gray-500 mt-1">Generate a new sale order and billing</p>
+                        </div>
                     </div>
-                    <div className="child-purchase-product">
-                        <label>Address</label><br />
-                        <input type="text"  placeholder='Enter customer address' value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} />
+
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8 overflow-hidden">
+                        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                            <h3 className="text-lg font-semibold text-gray-800">Customer Information</h3>
+                        </div>
+                        
+                        <div className="p-6">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                                <div className="space-y-1.5">
+                                    <label className="block text-sm font-medium text-gray-700">Customer ID</label>
+                                    <input 
+                                        type="text" 
+                                        value={custid} 
+                                        readOnly
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 text-sm outline-none"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="block text-sm font-medium text-gray-700">Customer Name <span className="text-red-500">*</span></label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Enter customer name" 
+                                        value={customerName} 
+                                        onChange={(e) => setCustomerName(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <label className="block text-sm font-medium text-gray-700">Address <span className="text-red-500">*</span></label>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Enter customer address" 
+                                        value={customerAddress} 
+                                        onChange={(e) => setCustomerAddress(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="border border-gray-200 rounded-lg overflow-hidden mb-8">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm text-left whitespace-nowrap">
+                                        <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
+                                            <tr>
+                                                <th className="px-4 py-3 font-semibold">Product Name</th>
+                                                <th className="px-4 py-3 font-semibold w-32">Sale Price (₹)</th>
+                                                <th className="px-4 py-3 font-semibold w-24">Quantity</th>
+                                                <th className="px-4 py-3 font-semibold w-32">Item Total (₹)</th>
+                                                <th className="px-4 py-3 font-semibold w-16 text-center">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {rows.map(row => (
+                                                <tr key={row.id} className="bg-white border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
+                                                    <td className="px-4 py-3">
+                                                        <select 
+                                                            onChange={(event) => handleProductChange(event, row.id)}
+                                                            className="w-full px-3 py-1.5 border border-gray-200 rounded focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm bg-white"
+                                                        >
+                                                            <option value="">Select Product</option>
+                                                            {productNames.map(productName => (
+                                                                <option key={productName} value={productName}>{productName}</option>
+                                                            ))}
+                                                        </select>
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <input 
+                                                            type="text" 
+                                                            value={salePrices[row.id] || ''} 
+                                                            placeholder="0.00" 
+                                                            readOnly 
+                                                            className="w-full px-3 py-1.5 border border-gray-200 rounded bg-gray-50 text-gray-500 outline-none text-sm"
+                                                        />
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <input 
+                                                            type="number" 
+                                                            placeholder="0" 
+                                                            onChange={(event) => handleQuantityChange(event, row.id)} 
+                                                            className="w-full px-3 py-1.5 border border-gray-200 rounded focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
+                                                        />
+                                                    </td>
+                                                    <td className="px-4 py-3">
+                                                        <input 
+                                                            type="text" 
+                                                            value={row.itemTotal || ''} 
+                                                            placeholder="0.00" 
+                                                            readOnly 
+                                                            className="w-full px-3 py-1.5 border border-gray-200 rounded bg-gray-50 text-gray-500 outline-none text-sm font-medium"
+                                                        />
+                                                    </td>
+                                                    <td className="px-4 py-3 text-center">
+                                                        <button 
+                                                            onClick={() => handleDeleteRow(row.id)}
+                                                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                                                            title="Delete Row"
+                                                        >
+                                                            <AiOutlineDelete className="text-lg" />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
+                                    <button 
+                                        onClick={addNewRow}
+                                        className="text-sm font-medium text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                                    >
+                                        <AiFillFileAdd className="text-lg" /> Add Another Row
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col md:flex-row justify-between items-start gap-6 mt-6">
+                                <div className="w-full md:w-1/2 space-y-4">
+                                    <label className="block text-sm font-medium text-gray-700">Payment Method</label>
+                                    <select className="w-full max-w-xs px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm bg-white">
+                                        <option value="1">Cash Payment</option>
+                                        <option value="2">Cheque Payment</option>
+                                        <option value="3">UPI Payment</option>
+                                        <option value="4">Google Pay Payment</option>
+                                    </select>
+                                </div>
+                                <div className="w-full md:w-80 bg-gray-50 p-6 rounded-lg border border-gray-100 space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-sm font-medium text-gray-600">Order Total</label>
+                                        <input type="text" value={calculateOrderTotal()} readOnly className="w-32 px-3 py-1.5 border border-gray-200 rounded bg-white text-right outline-none text-sm font-medium" placeholder="0.00" />
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-sm font-medium text-gray-600">Discount</label>
+                                        <input type="number" value={discount} onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)} className="w-32 px-3 py-1.5 border border-gray-200 rounded focus:ring-2 focus:ring-primary-500 outline-none text-sm text-right bg-white" placeholder="0.00" />
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-sm font-medium text-gray-600">CGST (8%)</label>
+                                        <input type="text" value={calculateCGST()} readOnly className="w-32 px-3 py-1.5 border border-gray-200 rounded bg-white text-right outline-none text-sm font-medium" placeholder="0.00" />
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-sm font-medium text-gray-600">SGST (8%)</label>
+                                        <input type="text" value={calculateSGST()} readOnly className="w-32 px-3 py-1.5 border border-gray-200 rounded bg-white text-right outline-none text-sm font-medium" placeholder="0.00" />
+                                    </div>
+                                    <div className="pt-4 border-t border-gray-200 flex justify-between items-center">
+                                        <label className="text-base font-bold text-gray-900">Final Total</label>
+                                        <span className="text-xl font-bold text-gray-900">₹{calculateFinalTotal()}</span>
+                                    </div>
+                                    <div className="pt-4 flex gap-3">
+                                        <button 
+                                            onClick={handleviewbill}
+                                            className="flex-1 py-2 px-4 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 font-medium rounded-lg shadow-sm transition-colors text-sm"
+                                        >
+                                            View Bill
+                                        </button>
+                                        <button 
+                                            onClick={handleFinalButtonClick}
+                                            className="flex-1 py-2 px-4 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg shadow-sm transition-colors text-sm"
+                                        >
+                                            Submit Order
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div className="child-purchase-product"  style={{marginTop: "8px"}}>
-                    <label>Customer Id</label><br />
-                    <input type="text" style={{ padding: "8px", marginTop: "10px" }} placeholder='Enter customer id' value={custid} onChange={(e) => setcustid(e.target.value)} readOnly />
-                </div>
-                <div className="parent-purchase-product-1">
-                    <div className="child-purchase-product-1">
-                        <table className="purchase-table">
-                            <thead>
-                                <tr>
-                                    <th>Product Name</th>
-                                    <th>Sale Price</th>
-                                    <th>Quantity</th>
-                                    <th>Item Total</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {rows.map(row => (
-                                    <tr key={row.id}>
-                                        <td>
-                                            <select style={{padding: '8px'}} onChange={(event) => handleProductChange(event, row.id)}>
-                                                {productNames.map(productName => (
-                                                    <option key={productName} value={productName}>{productName}</option>
-                                                ))}
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <input type="text" value={salePrices[row.id] || ''} placeholder='Price' size="8" readOnly />
-                                        </td>
-                                        <td>
-                                            <input type="text" placeholder='Qtn.' size="3" onChange={(event) => handleQuantityChange(event, row.id)} />
-                                        </td>
-                                        <td>
-                                            <input type="text" value={row.itemTotal || ''} placeholder='₹' size="6" readOnly />
-                                        </td>
-                                        <td><button onClick={() => handleDeleteRow(row.id)}><AiOutlineDelete className="delete" /></button></td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        <button className="newsalebutton" onClick={addNewRow}>New Row</button>
-                    </div>
-                    <div className="child-purchase-product-2">
-                        <label style={{ marginRight: '11px' }}>Order Total</label>
-                        <input type="text" value={calculateOrderTotal()} readOnly /><br />
-
-                        <label style={{ marginRight: '23px' }}>Discount </label>
-                        <input type="text" value={discount} onChange={(e) => setDiscount(parseFloat(e.target.value))} /><br />
-
-                        <label style={{ marginRight: '47px', fontWeight: "500" }}>CGST </label>
-                        <input type="text" value={calculateCGST()} readOnly /><br />
-
-                        <label style={{ marginRight: '47px', fontWeight: "500" }}>SGST </label>
-                        <input type="text" value={calculateSGST()} readOnly /><br />
-
-                        <label style={{ marginRight: '11px', fontWeight: "500" }}>Final Total </label>
-                        <input type="text" value={calculateFinalTotal()} readOnly /><br />
-
-                        <label style={{ marginRight: '24px' }}>Payment </label>
-                        <select style={{ width: "181px" }}>
-                            <option value="1">Cash Payment</option>
-                            <option value="2">Cheque Payment</option>
-                            <option value="3">Upi Payment</option>
-                            <option value="4">Google Pay Payment</option>
-                        </select><br />
-                        <button className="newsalebutton" onClick={handleFinalButtonClick}>Final</button>
-                      <button className="newsalebutton" style={{ marginLeft: "0px" }} onClick={handleviewbill}>View Bill</button>
-                    </div>
-                </div>
-            </div>
-        </div>{currentComponent}
-        </>
+                </>
+            )}
+            {currentComponent}
+        </div>
     );
 };
 

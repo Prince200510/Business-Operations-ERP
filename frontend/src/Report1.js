@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import database from './firebase';
 import { ref, onValue, get, child } from 'firebase/database';
-import './Dashboard.css';
-import { FaTruck, FaChartBar, FaChartLine, FaShoppingCart, FaBoxOpen, FaUser, FaUserFriends } from 'react-icons/fa';
-import { VictoryBar, VictoryChart, VictoryAxis, VictoryTheme, VictoryPie, VictoryLabel, VictoryLine, VictoryArea } from 'victory';
 import { useLocation } from 'react-router-dom';
+import { FaTruck, FaChartBar, FaShoppingCart, FaBoxOpen, FaUser, FaUserFriends } from 'react-icons/fa';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, Filler} from 'chart.js';
+import { Bar, Line, Pie } from 'react-chartjs-2';
+ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, Filler);
 
 const Report1 = () => {
     const [products, setProducts] = useState([]);
@@ -226,156 +227,160 @@ onValue(saleRef, (snapshot) => {
         setChartType(selectedChartType);
     };
     
-    const renderChart = () => {
-        if (chartType === 'bar') {
-            return (
-                <div className="report-chart-bar">
-                    <VictoryChart theme={VictoryTheme.material} domainPadding={20}>
-                        <VictoryAxis label="Month" />
-                        <VictoryAxis dependentAxis label="Purchase" tickValues={generateYAxisTicks()} />
-                        <VictoryBar
-                            data={prepareChartData()}
-                            style={{ data: { fill: "green" } }}
-                        />
-                    </VictoryChart>
-                </div>
-            );
-        } else if (chartType === 'pie') {
-            return (
-                <div className="report-chart-bar">
-                    <VictoryPie
-                        data={prepareChartData()}
-                        colorScale="qualitative"
-                        labelComponent={<VictoryLabel renderInPortal dy={20}/>}
-                        labels={({ datum }) => `${datum.x}\n${datum.y}`}
-                    />
-                </div>
-            );
-        } else if (chartType === 'line') {
-            return (
-                <div className="report-chart-bar">
-                    <VictoryChart theme={VictoryTheme.material} domainPadding={20}>
-                        <VictoryAxis label="Month" />
-                        <VictoryAxis dependentAxis label="Purchase" tickValues={generateYAxisTicks()} />
-                        <VictoryLine
-                            data={prepareChartData()}
-                            style={{ data: { stroke: "blue" } }}
-                        />
-                    </VictoryChart>
-                </div>
-            );
-        } else if (chartType === 'area') {
-            return (
-                <div className="report-chart-bar">
-                    <VictoryChart theme={VictoryTheme.material} domainPadding={20}>
-                        <VictoryAxis label="Month" />
-                        <VictoryAxis dependentAxis label="Purchase" tickValues={generateYAxisTicks()} />
-                        <VictoryArea
-                            data={prepareChartData()}
-                            style={{ data: { fill: "orange" } }}
-                        />
-                    </VictoryChart>
-                </div>
-            );
-        }
-    };
-
-    
     return (
-        <>
-        <div class="report1-container">
-            <h2>Dashboard</h2>
-            <div class="report1-child">
-                <div className="report-item">
-                    <div class="logo-report">
-                        <h2><FaTruck class="icons-report"/></h2>
+        <div className="w-full">
+            <div className="mb-8">
+                <h2 className="text-2xl font-bold text-gray-900">Dashboard Overview</h2>
+                <p className="text-gray-500 mt-1">Real-time business metrics and analytics</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center gap-4 hover:shadow-md transition-shadow">
+                    <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+                        <FaTruck className="text-xl text-blue-600" />
                     </div>
-                    <div class="report-content">
-                        <p>Purchases</p>
-                        <h3>{historycount}</h3>
-                        <h4>New Purchases</h4>
-                    </div>
-                </div>
-                <div className="report-item">
-                    <div class="logo-report" style={{backgroundColor: "#23A7E3"}}>
-                        <h2><FaChartBar class="icons-report" /></h2>
-                    </div>
-                    <div class="report-content">
-                        <p>Sales - History</p>
-                        <h3>{sale}</h3>
-                        <h4>New Sales</h4>
+                    <div>
+                        <p className="text-sm font-medium text-gray-500">Total Purchases</p>
+                        <h3 className="text-2xl font-bold text-gray-900">{historycount}</h3>
                     </div>
                 </div>
-                <div className="report-item">
-                    <div class="logo-report" style={{backgroundColor: "#23A7E3"}}>
-                        <h2><FaShoppingCart class="icons-report" /></h2>
+
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center gap-4 hover:shadow-md transition-shadow">
+                    <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center shrink-0">
+                        <FaChartBar className="text-xl text-emerald-600" />
                     </div>
-                    <div class="report-content">
-                        <p>Sales Orders - {new Date().toLocaleString('default', { month: 'long' })}</p>
-                        <h3>{sale1}</h3>
-                        <h4>New Sale</h4>
-                    </div>
-                </div>
-                <div className="report-item">
-                    <div class="logo-report">
-                        <h2><FaShoppingCart class="icons-report" /></h2>
-                    </div>
-                    <div class="report-content">
-                        <p>Purchases Orders - {new Date().toLocaleString('default', { month: 'long' })}</p>
-                        <h3>{purchaseOrderCount}</h3>
-                        <h4>New Purchases</h4>
+                    <div>
+                        <p className="text-sm font-medium text-gray-500">Total Sales</p>
+                        <h3 className="text-2xl font-bold text-gray-900">{sale}</h3>
                     </div>
                 </div>
-                <div className="report-item">
-                    <div class="logo-report" style={{backgroundColor: "grey"}}>
-                        <h2><FaBoxOpen class="icons-report"/></h2>
+
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center gap-4 hover:shadow-md transition-shadow">
+                    <div className="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center shrink-0">
+                        <FaShoppingCart className="text-xl text-purple-600" />
                     </div>
-                    <div class="report-content">
-                        <p>Product<select value={selectedProduct} onChange={handleProductChange}>
+                    <div>
+                        <p className="text-sm font-medium text-gray-500">Monthly Sales</p>
+                        <h3 className="text-2xl font-bold text-gray-900">{sale1}</h3>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center gap-4 hover:shadow-md transition-shadow">
+                    <div className="w-12 h-12 rounded-full bg-orange-50 flex items-center justify-center shrink-0">
+                        <FaUser className="text-xl text-orange-600" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-medium text-gray-500">Total Suppliers</p>
+                        <h3 className="text-2xl font-bold text-gray-900">{supplierCount}</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 lg:col-span-2">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 className="text-lg font-bold text-gray-900">Purchase Analytics</h3>
+                            <p className="text-sm text-gray-500">Monthly purchase volume trends</p>
+                        </div>
+                        <select 
+                            value={chartType} 
+                            onChange={handleChangeChartType}
+                            className="bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block p-2 outline-none"
+                        >
+                            <option value="bar">Bar Chart</option>
+                            <option value="line">Line Chart</option>
+                            <option value="area">Area Chart</option>
+                        </select>
+                    </div>
+                    <div className="h-72 w-full flex items-center justify-center">
+                        {chartType === 'bar' && (
+                            <Bar 
+                                data={{
+                                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                                    datasets: [{
+                                        label: 'Purchases',
+                                        data: prepareChartData().map(d => d.y),
+                                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                                        borderRadius: 4,
+                                    }]
+                                }} 
+                                options={{
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { display: false } }
+                                }} 
+                            />
+                        )}
+                        {chartType === 'line' && (
+                            <Line 
+                                data={{
+                                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                                    datasets: [{
+                                        label: 'Purchases',
+                                        data: prepareChartData().map(d => d.y),
+                                        borderColor: 'rgba(59, 130, 246, 1)',
+                                        tension: 0.4,
+                                        borderWidth: 3,
+                                        pointBackgroundColor: '#fff',
+                                        pointBorderColor: 'rgba(59, 130, 246, 1)',
+                                        pointBorderWidth: 2,
+                                    }]
+                                }} 
+                                options={{
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { display: false } }
+                                }} 
+                            />
+                        )}
+                        {chartType === 'area' && (
+                            <Line 
+                                data={{
+                                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                                    datasets: [{
+                                        label: 'Purchases',
+                                        data: prepareChartData().map(d => d.y),
+                                        borderColor: 'rgba(59, 130, 246, 1)',
+                                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                        fill: true,
+                                        tension: 0.4,
+                                        borderWidth: 2,
+                                    }]
+                                }} 
+                                options={{
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { display: false } }
+                                }} 
+                            />
+                        )}
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col">
+                    <h3 className="text-lg font-bold text-gray-900 mb-6">Quick Inventory Check</h3>
+                    <div className="bg-gray-50 rounded-lg p-5 border border-gray-100 flex-1 flex flex-col justify-center items-center text-center">
+                        <div className="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center mb-4">
+                            <FaBoxOpen className="text-3xl text-gray-400" />
+                        </div>
+                        <h4 className="text-3xl font-bold text-gray-900 mb-2">{quantity}</h4>
+                        <p className="text-sm text-gray-500 font-medium mb-4">Current Stock Level</p>
+                        
+                        <select 
+                            value={selectedProduct} 
+                            onChange={handleProductChange}
+                            className="w-full bg-white border border-gray-200 text-gray-700 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 p-2.5 outline-none font-medium shadow-sm"
+                        >
+                            <option value="">Select a product to view</option>
                             {products.map((product, index) => (
                                 <option key={index} value={product.name1}>{product.name1}</option>
                             ))}
-                        </select></p> 
-                        <h3>{quantity}</h3>
-                        <h4>Quantity</h4>
+                        </select>
                     </div>
                 </div>
-                <div className="report-item">
-                    <div class="logo-report"  style={{backgroundColor: "orange"}}>
-                        <h2><FaUser class="icons-report"/></h2>
-                    </div>
-                    <div class="report-content">
-                        <p>Suppliers</p>
-                        <h3>{supplierCount}</h3>
-                        <h4>New Suppliers</h4>
-                    </div>
-                </div>
-                <div className="report-item">
-                    <div class="logo-report" style={{backgroundColor: "red"}}>
-                        <h2><FaUserFriends class="icons-report"/></h2>
-                    </div>
-                    <div class="report-content">
-                        <p>Customers</p>
-                        <h3>{customerName}</h3>
-                        <h4>New Customers</h4>
-                    </div>
-                </div>
-            </div>
-            <h2>Chart</h2>
-            <div className="report1-container-1">
-                {renderChart()}
-            </div>
-            <div class="report-selection">
-                <select value={chartType} onChange={handleChangeChartType} class="bar">
-                    <option value="bar">Bar Chart</option>
-                    <option value="pie">Pie Chart</option>
-                    <option value="line">Line Chart</option>
-                    <option value="area">Area Chart</option>
-                </select>
-                <p>Purchase Report </p>
             </div>
         </div>
-        </>
     );
 };
 

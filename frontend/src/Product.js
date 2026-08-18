@@ -143,6 +143,7 @@ const Product = () => {
 
             setProducts([...Products, data]);
             setFilteredProducts([...Products, data]);
+            calculateTotals([...Products, data]);
             setNewProduct({
                 supplier_id: '',
                 name: '',
@@ -171,7 +172,7 @@ const Product = () => {
             setFilteredProducts(Products);
         } else {
             const filtered = Products.filter(product =>
-                product.name1.toLowerCase().includes(trimmedQuery)
+                product.name.toLowerCase().includes(trimmedQuery)
             );
             setFilteredProducts(filtered);
         }
@@ -283,107 +284,178 @@ const Product = () => {
 
     
     return (
-        <>
-            <h1 className="supplier">Products</h1>
-            <div className="supplier-container">
-                <div className="parent-supplier">
-                    <h3>Product Details</h3>
-                    <hr />
-                    <div className="new-supplier-entry">
-                        <div className="data">
-                            <label>Supplier Name</label><br />
-                            <select name="supplier_id" value={newProduct.supplier_id} onChange={handleInputChange}>
+        <div className="w-full">
+            <div className="mb-6 flex justify-between items-center">
+                <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Products Management</h2>
+                    <p className="text-gray-500 mt-1">Manage your inventory, prices, and stock levels</p>
+                </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                    <h3 className="text-lg font-semibold text-gray-800">Add New Product</h3>
+                </div>
+                <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                        <div className="space-y-1.5">
+                            <label className="block text-sm font-medium text-gray-700">Supplier <span className="text-red-500">*</span></label>
+                            <select 
+                                name="supplier_id" 
+                                value={newProduct.supplier_id} 
+                                onChange={handleInputChange}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm bg-white"
+                            >
                                 <option value="">Select Supplier</option>
                                 {supplierNames.map((supplier) => (
-                                    <option key={supplier.id} value={supplier.id}>
-                                        {supplier.name}
-                                    </option>
+                                    <option key={supplier.id} value={supplier.id}>{supplier.name}</option>
                                 ))}
                             </select>
                         </div>
-                        <div className="data">
-                            <label>Product Name</label><br />
-                            <input type="text" placeholder="Enter product name" name="name" value={newProduct.name} onChange={handleInputChange}></input>
+                        <div className="space-y-1.5">
+                            <label className="block text-sm font-medium text-gray-700">Product Name <span className="text-red-500">*</span></label>
+                            <input 
+                                type="text" 
+                                placeholder="E.g., Office Chair" 
+                                name="name" 
+                                value={newProduct.name} 
+                                onChange={handleInputChange}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm"
+                            />
                         </div>
-                        <div className="data">
-                            <label>Purchase Price</label><br />
-                            <input type="number" min={1} max={1000000} placeholder="Purchase ₹" name="purchase_price" value={newProduct.purchase_price} onChange={handleInputChange}></input>
+                        <div className="space-y-1.5">
+                            <label className="block text-sm font-medium text-gray-700">Purchase Price (₹) <span className="text-red-500">*</span></label>
+                            <input 
+                                type="number" 
+                                min={1} 
+                                placeholder="0.00" 
+                                name="purchase_price" 
+                                value={newProduct.purchase_price} 
+                                onChange={handleInputChange}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm"
+                            />
                         </div>
-                        <div className="data">
-                            <label>Sale Price</label><br />
-                            <input type="number" min={1} max={10000000} placeholder="sale ₹" name="sale_price" value={newProduct.sale_price} onChange={handleInputChange}></input>
+                        <div className="space-y-1.5">
+                            <label className="block text-sm font-medium text-gray-700">Sale Price (₹) <span className="text-red-500">*</span></label>
+                            <input 
+                                type="number" 
+                                min={1} 
+                                placeholder="0.00" 
+                                name="sale_price" 
+                                value={newProduct.sale_price} 
+                                onChange={handleInputChange}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm"
+                            />
                         </div>
-                        <div className="data">
-                            <label>Quantity</label><br />
-                            <input type="number" min={1} max={100} placeholder="Qtn." name="quantity" value={newProduct.quantity} onChange={handleInputChange}></input>
+                        <div className="space-y-1.5">
+                            <label className="block text-sm font-medium text-gray-700">Quantity <span className="text-red-500">*</span></label>
+                            <input 
+                                type="number" 
+                                min={1} 
+                                placeholder="0" 
+                                name="quantity" 
+                                value={newProduct.quantity} 
+                                onChange={handleInputChange}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm"
+                            />
                         </div>
-                        <div className="data">
-                            <label></label><br />
-                            <button onClick={handleNewProductSubmit}>New Product</button>
-                        </div>
-                        <div className="data">
-                            <label>Search</label><br />
-                            <input     type="text"     placeholder="Search product name"     value={searchQuery}     onChange={(e) => setSearchQuery(e.target.value)} />
-                        </div>
-                        <div className="data">
-                            <label></label><br />
-                            <button onClick={handleSearch}>Go</button>
-                        </div>
+                    </div>
+                    <div className="mt-6 flex justify-end">
+                        <button 
+                            onClick={handleNewProductSubmit}
+                            className="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg shadow-sm transition-colors text-sm"
+                        >
+                            Save Product
+                        </button>
                     </div>
                 </div>
             </div>
-            <div className="supplier-data-show">
-                <table className="supplier-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Supplier Name</th>
-                            <th>Product Name</th>
-                            <th>Quantity</th>
-                            <th>Purchase Price</th>
-                            <th>Sale Price</th>
-                            <th>Total Purchase Price</th>
-                            <th>Total Sale Price</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {(searchQuery.trim() === '' ? Products : filteredProducts).length > 0 ? (
-        (searchQuery.trim() === '' ? Products : filteredProducts).map((Product, index) => (
-            <tr key={index}>
-                <td>{index + 1}</td>
-                <td>{supplierNames.find(s => s.id === Product.supplier_id)?.name || 'Unknown'}</td>
-                <td>{Product.name}</td>
-                <td>{Product.quantity}</td>
-                <td>{parseFloat(Product.purchase_price).toFixed(2)}</td>
-                <td>{parseFloat(Product.sale_price).toFixed(2)}</td>
-                <td>{calculateTotalPurchasePrice(Product.quantity, Product.purchase_price)}</td>
-                <td>{calculateTotalSalePrice(Product.quantity, Product.sale_price)}</td>
-                <td>
-                    <button onClick={() => handleDeleteProduct(Product.id)}>
-                        <AiOutlineDelete className="delete" />
-                    </button>
-                </td>
-            </tr>
-        ))
-    ) : (
-        <tr>
-            <td colSpan="10">No products found</td>
-        </tr>
-    )}
 
-                    <td style={{fontWeight: "700"}}>Total</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td style={{fontWeight: "700"}}>{purchase}</td>
-                    <td style={{fontWeight: "700"}}>{sales}</td>
-                    <td style={{fontWeight: "700"}}>{totalPurchase}</td>
-                    <td style={{fontWeight: "700"}}>{totalSales}</td>
-                    </tbody>
-                </table>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <h3 className="text-lg font-semibold text-gray-800">Product Inventory</h3>
+                    <div className="flex w-full sm:w-auto">
+                        <input 
+                            type="text" 
+                            placeholder="Search products..." 
+                            value={searchQuery} 
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full sm:w-64 px-3 py-2 border border-gray-200 rounded-l-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm"
+                        />
+                        <button 
+                            onClick={handleSearch}
+                            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-r-lg border border-l-0 border-gray-200 transition-colors text-sm"
+                        >
+                            Search
+                        </button>
+                    </div>
+                </div>
+                
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left whitespace-nowrap">
+                        <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100">
+                            <tr>
+                                <th className="px-6 py-4 font-semibold">ID</th>
+                                <th className="px-6 py-4 font-semibold">Supplier</th>
+                                <th className="px-6 py-4 font-semibold">Product Name</th>
+                                <th className="px-6 py-4 font-semibold text-right">Qty</th>
+                                <th className="px-6 py-4 font-semibold text-right">Purchase (₹)</th>
+                                <th className="px-6 py-4 font-semibold text-right">Sale (₹)</th>
+                                <th className="px-6 py-4 font-semibold text-right">Total Purchase (₹)</th>
+                                <th className="px-6 py-4 font-semibold text-right">Total Sale (₹)</th>
+                                <th className="px-6 py-4 font-semibold text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {(searchQuery.trim() === '' ? Products : filteredProducts).length > 0 ? (
+                                (searchQuery.trim() === '' ? Products : filteredProducts).map((Product, index) => (
+                                    <tr key={index} className="hover:bg-gray-50/50 transition-colors">
+                                        <td className="px-6 py-4 font-medium text-gray-900">{index + 1}</td>
+                                        <td className="px-6 py-4 text-gray-600">{supplierNames.find(s => s.id === Product.supplier_id)?.name || 'Unknown'}</td>
+                                        <td className="px-6 py-4 font-medium text-gray-900">{Product.name}</td>
+                                        <td className="px-6 py-4 text-right">
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
+                                                {Product.quantity}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-600 text-right">{parseFloat(Product.purchase_price).toFixed(2)}</td>
+                                        <td className="px-6 py-4 text-gray-600 text-right">{parseFloat(Product.sale_price).toFixed(2)}</td>
+                                        <td className="px-6 py-4 font-medium text-gray-700 text-right">{calculateTotalPurchasePrice(Product.quantity, Product.purchase_price)}</td>
+                                        <td className="px-6 py-4 font-medium text-gray-700 text-right">{calculateTotalSalePrice(Product.quantity, Product.sale_price)}</td>
+                                        <td className="px-6 py-4 text-center">
+                                            <button 
+                                                onClick={() => handleDeleteProduct(Product.id)}
+                                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors inline-flex justify-center"
+                                                title="Delete Product"
+                                            >
+                                                <AiOutlineDelete className="text-lg" />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="9" className="px-6 py-8 text-center text-gray-500">
+                                        No products found matching your search.
+                                    </td>
+                                </tr>
+                            )}
+                            
+                            {(searchQuery.trim() === '' ? Products : filteredProducts).length > 0 && (
+                                <tr className="bg-gray-50 font-semibold border-t-2 border-gray-200">
+                                    <td className="px-6 py-4 text-gray-900" colSpan="4">Total Summary</td>
+                                    <td className="px-6 py-4 text-right text-gray-900">{purchase}</td>
+                                    <td className="px-6 py-4 text-right text-gray-900">{sales}</td>
+                                    <td className="px-6 py-4 text-right text-primary-700">{totalPurchase}</td>
+                                    <td className="px-6 py-4 text-right text-emerald-600">{totalSales}</td>
+                                    <td className="px-6 py-4"></td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </>
+        </div>
     );
 };
 

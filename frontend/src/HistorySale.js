@@ -46,81 +46,96 @@ const HistorySale = () => {
     const filteredCustomers = filterCustomersByMonth(customers, selectedMonth);
 
     return (
-        <>
-            <h1 className="supplier">Sales History</h1>
-            <div className="supplier-container">
-                <div className="parent-supplier">
-                    <select style={{padding: "8px", marginLeft: "20px"}} value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
+        <div className="w-full">
+            <div className="mb-6 flex justify-between items-center">
+                <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Sales History</h2>
+                    <p className="text-gray-500 mt-1">View and filter all previous sales records</p>
+                </div>
+                <div className="flex gap-4">
+                    <select 
+                        value={selectedMonth} 
+                        onChange={(e) => setSelectedMonth(e.target.value)}
+                        className="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-sm bg-white font-medium text-gray-700 shadow-sm"
+                    >
                         <option value="all">All Months</option>
-                        {[...Array(12).keys()].map(month => (
-                            <option key={month + 1} value={month + 1}>{month + 1}</option>
+                        {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((month, idx) => (
+                            <option key={idx + 1} value={idx + 1}>{month}</option>
                         ))}
                     </select>
                 </div>
-                <div className="supplier-data-show">
-                    <table className="supplier-table">
-                        <thead>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                        <thead className="text-xs text-gray-500 uppercase bg-gray-50/80 border-b border-gray-100">
                             <tr>
-                                <th>ID</th>
-                                <th>username</th>
-                                <th>Customer Name</th>
-                                <th>Purchased Product</th>
-                                <th>Qtn</th>
-                                <th>Date</th>
-                                <th>Discount</th>
-                                <th>Order Total</th>
-                                <th>CGST</th>
-                                <th>SGST</th>
-                                <th>Final Total</th>
+                                <th className="px-6 py-4 font-semibold">ID</th>
+                                <th className="px-6 py-4 font-semibold">Customer</th>
+                                <th className="px-6 py-4 font-semibold">Products & Qty</th>
+                                <th className="px-6 py-4 font-semibold">Date</th>
+                                <th className="px-6 py-4 font-semibold">Taxes</th>
+                                <th className="px-6 py-4 font-semibold">Discount</th>
+                                <th className="px-6 py-4 font-semibold text-right">Final Total (₹)</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody className="divide-y divide-gray-100">
                             {filteredCustomers.length > 0 ? (
                                 filteredCustomers.map((customer, index) => (
-                                    <tr key={index}>
-                                        <td>{index + 1}</td>
-                                        <td>{customer.username}</td>
-                                        <td>{customer.customerName}</td>
-                                        <td>
+                                    <tr key={index} className="hover:bg-gray-50/50 transition-colors">
+                                        <td className="px-6 py-4 text-gray-600 font-medium">#{index + 1}</td>
+                                        <td className="px-6 py-4">
+                                            <div className="font-medium text-gray-900">{customer.customerName}</div>
+                                            <div className="text-xs text-gray-500">by {customer.username}</div>
+                                        </td>
+                                        <td className="px-6 py-4">
                                             {customer.products && customer.products.length > 0 ? (
-                                                customer.products.map((product, index) => (
-                                                    <div key={index}>
-                                                        <div>{product.productName}</div>
-                                                    </div>
-                                                ))
+                                                <ul className="space-y-1">
+                                                    {customer.products.map((product, idx) => (
+                                                        <li key={idx} className="text-gray-600 flex justify-between gap-4">
+                                                            <span>• {product.productName}</span>
+                                                            <span className="font-medium text-gray-900">x{product.quantity}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
                                             ) : (
-                                                <div>No products</div>
+                                                <span className="text-gray-400 italic">No products</span>
                                             )}
                                         </td>
-                                        <td>
-                                            {customer.products && customer.products.length > 0 ? (
-                                                customer.products.map((product, index) => (
-                                                    <div key={index}>
-                                                        <div>{product.quantity}</div>
-                                                    </div>
-                                                ))
-                                            ) : (
-                                                <div>No quantities</div>
-                                            )}
+                                        <td className="px-6 py-4 text-gray-600">{customer.date}</td>
+                                        <td className="px-6 py-4">
+                                            <div className="text-xs text-gray-500">CGST: <span className="font-medium text-gray-700">₹{customer.cgst}</span></div>
+                                            <div className="text-xs text-gray-500">SGST: <span className="font-medium text-gray-700">₹{customer.sgst}</span></div>
                                         </td>
-                                        <td>{customer.date}</td>
-                                        <td>{customer.discount}</td>
-                                        <td>{customer.orderTotal}</td>
-                                        <td>{customer.cgst}</td>
-                                        <td>{customer.sgst}</td>
-                                        <td>{customer.finalTotal}</td>
+                                        <td className="px-6 py-4 text-red-500 font-medium">
+                                            {customer.discount > 0 ? `-₹${customer.discount}` : '₹0.00'}
+                                        </td>
+                                        <td className="px-6 py-4 text-right font-bold text-gray-900">
+                                            ₹{customer.finalTotal}
+                                        </td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="9">No data found</td>
+                                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                                        <div className="flex flex-col items-center justify-center">
+                                            <div className="bg-gray-50 p-4 rounded-full mb-3">
+                                                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                </svg>
+                                            </div>
+                                            <p className="text-base font-medium text-gray-900">No records found</p>
+                                            <p className="text-sm text-gray-500 mt-1">Try changing the month filter</p>
+                                        </div>
+                                    </td>
                                 </tr>
                             )}
                         </tbody>
                     </table>
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 
