@@ -143,7 +143,7 @@ const Supplier = () => {
             return;
         }
 
-        const token = localStorage.getItem('access_item');
+        const token = localStorage.getItem('access_token');
 
         if(!token) {
             navigate('/');
@@ -235,10 +235,10 @@ const Supplier = () => {
                             <td>{index + 1}</td>
                             <td>{supplier.name}</td>
                             <td>{supplier.email}</td>
-                            <td>{supplier.phoneNumber}</td>
+                            <td>{supplier.phone_number}</td>
                             <td>{supplier.address}</td>
                             <td>
-                                <button onClick={() => handleDeleteSupplier(supplier.name)}>
+                                <button onClick={() => handleDeleteSupplier(supplier.id)}>
                                     <AiOutlineDelete className="delete" />
                                 </button>
                             </td>
