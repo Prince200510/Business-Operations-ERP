@@ -10,6 +10,7 @@ const Purchase = () => {
     const [selectedSupplierAddress, setSelectedSupplierAddress] = useState('');
     const [itemName, setItemName] = useState('');
     const [itemPrice, setItemPrice] = useState('');
+    const [itemSalePrice, setItemSalePrice] = useState('');
     const [itemQuantity, setItemQuantity] = useState('');
     const [itemTotal, setItemTotal] = useState('');
     const [discount, setDiscount] = useState('');
@@ -156,6 +157,7 @@ const Purchase = () => {
                     product_name: itemName,
                     quantity: Number(itemQuantity),
                     purchase_price: Number(itemPrice),
+                    sale_price: Number(itemSalePrice),
                     discount: Number(discount),
                     payment_method: paymentMethod,
                 })
@@ -198,12 +200,53 @@ const Purchase = () => {
         setSelectedSupplierAddress('');
         setItemName('');
         setItemPrice('');
+        setItemSalePrice('');
         setItemQuantity('');
         setItemTotal('');
         setDiscount('');
         setFinalTotal('');
         setPaymentMethod('');
     };
+
+    const handleAddtoInventory = async (purchaseId) => {
+        const token = localStorage.getItem('access_token');
+        if(!token) {
+            navigate('/');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/purchases/${purchaseId}/add-to-inventory`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`      
+                }
+            });
+
+            const data = await response.json();
+            if(!response.ok) {
+                throw new Error(data.detail || 'Failed to add to inventory');
+            }
+
+            Swal.fire({
+                title: 'Success!',
+                text: 'Purchase successfully added to inventory',
+                icon: 'success',
+                confirmButtonText: 'Ok'
+            });
+
+            fetch_purchases();
+        } catch (error) {
+            Swal.fire({
+                title: 'Error!',
+                text: error.message,
+                icon: 'error',
+                confirmButtonText: 'Ok'
+            });
+        }
+    };
+
 
     return (
         <div className="flex-1 overflow-y-auto p-container-margin w-full bg-background font-body-md text-on-background">
@@ -253,9 +296,10 @@ const Purchase = () => {
                                 <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
                                     <tr>
                                         <th className="px-4 py-3 font-semibold">Product Name</th>
-                                        <th className="px-4 py-3 font-semibold w-32">Unit Price (₹)</th>
+                                        <th className="px-4 py-3 font-semibold w-24">Unit Price (₹)</th>
+                                        <th className="px-4 py-3 font-semibold w-24">Sale Price (₹)</th>
                                         <th className="px-4 py-3 font-semibold w-24">Quantity</th>
-                                        <th className="px-4 py-3 font-semibold w-32">Item Total (₹)</th>
+                                        <th className="px-4 py-3 font-semibold w-24">Item Total (₹)</th>
                                         <th className="px-4 py-3 font-semibold w-16 text-center">Action</th>
                                     </tr>
                                 </thead>
@@ -276,6 +320,15 @@ const Purchase = () => {
                                                 placeholder="0.00" 
                                                 value={itemPrice} 
                                                 onChange={handleItemPriceChange}
+                                                className="w-full px-3 py-1.5 border border-gray-200 rounded focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
+                                            />
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <input 
+                                                type="number" 
+                                                placeholder="0.00" 
+                                                value={itemSalePrice} 
+                                                onChange={(e) => setItemSalePrice(e.target.value)}
                                                 className="w-full px-3 py-1.5 border border-gray-200 rounded focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
                                             />
                                         </td>
@@ -382,6 +435,7 @@ const Purchase = () => {
                                     <th className="px-6 py-4 font-semibold text-right">Total (₹)</th>
                                     <th className="px-6 py-4 font-semibold text-right">Discount (₹)</th>
                                     <th className="px-6 py-4 font-semibold text-right">Final Amount (₹)</th>
+                                    <th className="px-6 py-4 font-semibold text-center">Status</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
@@ -399,11 +453,25 @@ const Purchase = () => {
                                         <td className="px-6 py-4 text-gray-600 text-right">{parseFloat(purchase.item_total).toFixed(2)}</td>
                                         <td className="px-6 py-4 text-gray-600 text-right text-red-500">-{parseFloat(purchase.discount).toFixed(2)}</td>
                                         <td className="px-6 py-4 font-medium text-gray-900 text-right">{parseFloat(purchase.final_total).toFixed(2)}</td>
+                                        <td className="px-6 py-4 text-center">
+                                            {purchase.added_to_inventory_at ? (
+                                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                    Added on {new Date(purchase.added_to_inventory_at).toLocaleDateString()}
+                                                </span>
+                                            ) : (
+                                                <button
+                                                    onClick={() => handleAddtoInventory(purchase.id)}
+                                                    className="px-3 py-1 bg-primary-100 text-primary-700 hover:bg-primary-200 rounded text-xs font-medium transition-colors"
+                                                >
+                                                    Add to Inventory
+                                                </button>
+                                            )}
+                                        </td>
                                     </tr>
                                 ))}
                                 {purchases.length === 0 && (
                                     <tr>
-                                        <td colSpan="8" className="px-6 py-8 text-center text-gray-500">
+                                        <td colSpan="9" className="px-6 py-8 text-center text-gray-500">
                                             No purchase history found.
                                         </td>
                                     </tr>

@@ -18,5 +18,6 @@ class Purchase(Base):
     discount: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable = False, default = 0)
     final_total: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable = False)
     payment_method: Mapped[str] = mapped_column(String(30), nullable = False)
+    added_to_inventory_at: Mapped[datetime] = mapped_column(DateTime, nullable = True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default = datetime.utcnow, nullable = False)
     

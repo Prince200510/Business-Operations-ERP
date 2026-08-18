@@ -25,7 +25,7 @@ def create_purchase(purchase_data: PurchaseCreate, db: Session = Depends(get_db)
             supplier_id = purchase_data.supplier_id,
             name = purchase_data.product_name,
             purchase_price = purchase_data.purchase_price,
-            sale_price = 0,
+            sale_price = purchase_data.sale_price,
             quantity = 0
         )
         db.add(product)
@@ -50,7 +50,6 @@ def create_purchase(purchase_data: PurchaseCreate, db: Session = Depends(get_db)
     )
     
     db.add(purchase)
-    product.quantity += purchase_data.quantity
     db.commit()
     db.refresh(purchase)
     
@@ -60,3 +59,26 @@ def create_purchase(purchase_data: PurchaseCreate, db: Session = Depends(get_db)
 def get_purchases(db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
     purchases = (db.query(Purchase).filter(Purchase.user_id == user_id).order_by(Purchase.id.desc()).all())
     return purchases
+
+@router.post("/{purchase_id}/add-to-inventory", response_model=PurchaseResponse)
+def add_to_inventory(purchase_id: int, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
+    from datetime import datetime
+    purchase = db.query(Purchase).filter(Purchase.id == purchase_id, Purchase.user_id == user_id).first()
+    
+    if not purchase:
+        raise HTTPException(status_code = 404, detail = "Purchase not found")
+        
+    if purchase.added_to_inventory_at:
+        raise HTTPException(status_code = 400, detail = "Purchase already added to inventory")
+        
+    product = db.query(Product).filter(Product.id == purchase.product_id, Product.user_id == user_id).first()
+    if not product:
+        raise HTTPException(status_code = 404, detail = "Associated product not found")
+        
+    product.quantity += purchase.quantity
+    purchase.added_to_inventory_at = datetime.utcnow()
+    
+    db.commit()
+    db.refresh(purchase)
+    
+    return purchase
