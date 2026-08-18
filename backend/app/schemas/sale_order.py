@@ -20,6 +20,9 @@ class SaleOrderItemResponse(BaseModel):
     quantity: int
     sale_price: Decimal
     item_total: Decimal
+    
+    class Config:
+        from_attributes = True
 
 class SaleOrderResponse(BaseModel):
     id: int
@@ -32,3 +35,6 @@ class SaleOrderResponse(BaseModel):
     payment_method: str
     created_at: datetime
     items: list[SaleOrderItemResponse]
+    
+    class Config:
+        from_attributes = True

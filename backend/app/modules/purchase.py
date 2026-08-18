@@ -9,8 +9,8 @@ class Purchase(Base):
 
     id: Mapped[int] = mapped_column(primary_key = True, index = True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable = False, index = True)
-    supplier_id: Mapped[int] = mapped_column(ForeignKey("suppliers.id"), nullable = False, index = True)
-    product_id: Mapped[int] = mapped_column(ForeignKey("products.id"), nullable = False, index = True)
+    supplier_id: Mapped[int] = mapped_column(ForeignKey("suppliers.id", ondelete="CASCADE"), nullable = False, index = True)
+    product_id: Mapped[int] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"), nullable = False, index = True)
     quantity: Mapped[int] = mapped_column(Integer, nullable = False)
     purchase_price: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable = False)
     item_total: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable = False)
