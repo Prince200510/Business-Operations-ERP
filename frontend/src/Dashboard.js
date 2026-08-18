@@ -32,36 +32,13 @@ const Dashboard = () => {
         setIsDropdownOpen1(!isDropdownOpen1);
     };
 
+    const [activeTab, setActiveTab] = useState('dashboard');
     const [currentComponent, setCurrentComponent] = useState(<Report1 />);
     
-    const handleDashboardClick = () => {
-        setCurrentComponent(<Report1 />);
+    const handleNavigation = (tabName, component) => {
+        setActiveTab(tabName);
+        setCurrentComponent(component);
     };
-
-    const handleSupplierClick = () => {
-        setCurrentComponent(<Supplier />);
-    };
-
-    const handleProductClick = () => {
-        setCurrentComponent(<Product />);
-    };
-
-    const handlePurchaseClick = () => {
-        setCurrentComponent(<Purchase />);
-    }
-
-    const handleNewSaleClick = () => {
-        setCurrentComponent(<NewSale />);
-    }
-
-    const handleHistorySaleClick = () => {
-        setCurrentComponent(<HistorySale />);
-    }
-
-    const handleBussinessClick = () => {
-        setCurrentComponent(<Bussiness />);
-    }
-
 
     if (!location.state || !location.state.userName) {
         if (storedUser && storedUser.username) {
@@ -75,102 +52,112 @@ const Dashboard = () => {
         localStorage.removeItem('loggedInUser');
         localStorage.removeItem('access_token');
         navigate('/');
-      };
+    };
+
+    const getNavItemClass = (tabName) => {
+        return activeTab === tabName
+            ? "flex items-center gap-3 px-3 py-2 bg-secondary-container text-on-secondary-container border-l-4 border-primary font-bold rounded-r-sm transition-all duration-200 ease-in-out cursor-pointer"
+            : "flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-high border-l-4 border-transparent rounded-r-sm transition-all duration-200 ease-in-out cursor-pointer";
+    };
+
+    const getIconClass = (tabName) => {
+        return activeTab === tabName 
+            ? "material-symbols-outlined icon-fill text-[20px]" 
+            : "material-symbols-outlined text-[20px]";
+    };
+
     return (
-        <div className="flex h-screen bg-gray-50 font-sans overflow-hidden">
-            <div className="w-64 bg-sidebar text-white flex flex-col shadow-xl z-20 transition-all duration-300 shrink-0">
-                <div className="h-16 flex items-center px-6 border-b border-gray-800 bg-gray-900 shrink-0">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded bg-primary-500 flex items-center justify-center font-bold text-lg shadow-inner">N</div>
-                        <span className="text-xl font-bold tracking-tight">Nexora ERP</span>
-                    </div>
+        <div className="bg-background text-on-background font-body-md h-screen w-full overflow-hidden flex flex-col">
+            {/* TopNavBar */}
+            <header className="bg-surface-container-lowest border-b border-outline-variant flex justify-between items-center w-full px-container-margin h-16 sticky top-0 z-50 shrink-0">
+                <div className="flex items-center gap-gutter">
+                    <div className="font-h1 text-h1 font-bold text-primary">Business ERP</div>
                 </div>
-                <div className="flex-1 overflow-y-auto py-4 custom-scrollbar">
-                    <nav className="space-y-1 px-3">
-                        <p className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-2">Overview</p>
-                        <div onClick={handleDashboardClick} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 cursor-pointer text-gray-300 hover:text-white transition-colors group">
-                            <FaPalette className="text-gray-400 group-hover:text-primary-400 text-lg" />
-                            <span className="font-medium text-sm">Dashboard</span>
-                        </div>
-                        <div onClick={handleNewSaleClick} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 cursor-pointer text-gray-300 hover:text-white transition-colors group">
-                            <FaNewspaper className="text-gray-400 group-hover:text-primary-400 text-lg" />
-                            <span className="font-medium text-sm">New Sale</span>
-                        </div>
-                        
-                        <p className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-6">Management</p>
-                        <div className="space-y-1">
-                            <div onClick={toggleDropdown} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-gray-800 cursor-pointer text-gray-300 hover:text-white transition-colors group">
-                                <div className="flex items-center gap-3">
-                                    <IoCartOutline className="text-gray-400 group-hover:text-primary-400 text-xl" />
-                                    <span className="font-medium text-sm">Sales</span>
-                                </div>
-                                <AiOutlineDown className={`text-xs transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
-                            </div>
-                            {isDropdownOpen && (
-                                <div className="pl-11 pr-3 space-y-1 mt-1">
-                                    <div onClick={handleNewSaleClick} className="py-2 text-sm text-gray-400 hover:text-white cursor-pointer transition-colors">Create Sale</div>
-                                    <div onClick={handleHistorySaleClick} className="py-2 text-sm text-gray-400 hover:text-white cursor-pointer transition-colors">Sales History</div>
-                                </div>
-                            )}
-                        </div>
-
-                        <div onClick={handlePurchaseClick} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 cursor-pointer text-gray-300 hover:text-white transition-colors group">
-                            <FaTruck className="text-gray-400 group-hover:text-primary-400 text-lg" />
-                            <span className="font-medium text-sm">Purchases</span>
-                        </div>
-                        <div onClick={handleProductClick} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 cursor-pointer text-gray-300 hover:text-white transition-colors group">
-                            <FaBox className="text-gray-400 group-hover:text-primary-400 text-lg" />
-                            <span className="font-medium text-sm">Products</span>
-                        </div>
-                        <div onClick={handleSupplierClick} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800 cursor-pointer text-gray-300 hover:text-white transition-colors group">
-                            <IoPeopleOutline className="text-gray-400 group-hover:text-primary-400 text-xl" />
-                            <span className="font-medium text-sm">Suppliers</span>
-                        </div>
-
-                        <p className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 mt-6">Configuration</p>
-                        <div className="space-y-1">
-                            <div onClick={toggleDropdown1} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-gray-800 cursor-pointer text-gray-300 hover:text-white transition-colors group">
-                                <div className="flex items-center gap-3">
-                                    <IoSettingsOutline className="text-gray-400 group-hover:text-primary-400 text-xl" />
-                                    <span className="font-medium text-sm">Settings</span>
-                                </div>
-                                <AiOutlineDown className={`text-xs transition-transform ${isDropdownOpen1 ? 'rotate-180' : ''}`} />
-                            </div>
-                            {isDropdownOpen1 && (
-                                <div className="pl-11 pr-3 space-y-1 mt-1">
-                                    <div onClick={handleBussinessClick} className="py-2 text-sm text-gray-400 hover:text-white cursor-pointer transition-colors">Business Profile</div>
-                                </div>
-                            )}
-                        </div>
-                    </nav>
-                </div>
-            </div>
-
-            <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
-                <header className="h-16 bg-white/80 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-8 shadow-sm z-10 shrink-0">
-                    <div className="flex items-center text-gray-500 text-sm font-medium">
-                        <span className="text-gray-400">Nexora ERP</span>
-                        <span className="mx-2 text-gray-300">/</span>
-                        <span className="text-gray-900">Workspace</span>
+                <div className="flex items-center gap-gutter">
+                    {/* Search Bar */}
+                    <div className="relative hidden md:block w-64">
+                        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+                        <input className="w-full h-8 pl-9 pr-3 bg-surface-container-low border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary font-body-sm text-on-surface placeholder:text-on-surface-variant transition-all outline-none" placeholder="Search operations..." type="text"/>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-3 pr-4 border-r border-gray-200">
-                            <div className="text-right hidden sm:block">
-                                <p className="text-sm font-semibold text-gray-900 leading-tight capitalize">{username || 'Admin'}</p>
-                                <p className="text-xs text-gray-500">Administrator</p>
-                            </div>
-                            <div className="w-9 h-9 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold border border-primary-200 shadow-sm">
-                                {(username || 'A')[0].toUpperCase()}
-                            </div>
-                        </div>
-                        <button onClick={handleLogout} className="text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded transition-colors">
-                            Logout
+                    <div className="flex items-center gap-2">
+                        <button className="p-2 text-on-surface-variant hover:bg-surface-container transition-colors rounded-full flex items-center justify-center">
+                            <span className="material-symbols-outlined text-[20px]">notifications</span>
+                        </button>
+                        <button className="p-2 text-on-surface-variant hover:bg-surface-container transition-colors rounded-full flex items-center justify-center">
+                            <span className="material-symbols-outlined text-[20px]">help</span>
                         </button>
                     </div>
-                </header>
+                    <div className="h-8 w-px bg-outline-variant mx-2"></div>
+                    <div className="flex items-center gap-3 cursor-pointer opacity-80 transition-all hover:opacity-100" onClick={handleLogout}>
+                        <div className="flex flex-col text-right hidden sm:flex">
+                            <span className="font-body-sm text-[13px] text-on-surface font-semibold leading-tight capitalize">{username || 'Admin'}</span>
+                            <span className="font-label-caps text-[10px] text-on-surface-variant">LOGOUT</span>
+                        </div>
+                        <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container border border-outline-variant flex items-center justify-center overflow-hidden font-bold">
+                            {(username || 'A')[0].toUpperCase()}
+                        </div>
+                    </div>
+                </div>
+            </header>
 
-                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
-                    <div className="max-w-[1600px] mx-auto">
+            <div className="flex flex-1 overflow-hidden relative">
+                {/* SideNavBar */}
+                <aside className="bg-surface border-r border-outline-variant fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 flex flex-col z-40 transition-all duration-200 ease-in-out hidden md:flex shrink-0">
+                    {/* Header section */}
+                    <div className="p-container-margin border-b border-outline-variant flex items-center gap-3">
+                        <div className="w-10 h-10 rounded bg-primary-container text-on-primary flex items-center justify-center font-bold text-lg">
+                            {(username || 'B')[0].toUpperCase()}
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="font-h3 text-[14px] leading-tight text-on-surface font-semibold capitalize">{username || 'Business'} Workspace</span>
+                            <span className="font-label-caps text-[11px] text-on-surface-variant">Enterprise Admin</span>
+                        </div>
+                    </div>
+                    
+                    {/* Navigation Links */}
+                    <nav className="flex-1 overflow-y-auto py-4 flex flex-col gap-1 px-3">
+                        <div className={getNavItemClass('dashboard')} onClick={() => handleNavigation('dashboard', <Report1 />)}>
+                            <span className={getIconClass('dashboard')}>dashboard</span>
+                            <span className="font-body-md text-[13px]">Dashboard</span>
+                        </div>
+                        
+                        <div className={getNavItemClass('inventory')} onClick={() => handleNavigation('inventory', <Product />)}>
+                            <span className={getIconClass('inventory')}>inventory_2</span>
+                            <span className="font-body-md text-[13px]">Products & Inventory</span>
+                        </div>
+                        
+                        <div className={getNavItemClass('new_sale')} onClick={() => handleNavigation('new_sale', <NewSale />)}>
+                            <span className={getIconClass('new_sale')}>point_of_sale</span>
+                            <span className="font-body-md text-[13px]">New Sale</span>
+                        </div>
+
+                        <div className={getNavItemClass('sales_history')} onClick={() => handleNavigation('sales_history', <HistorySale />)}>
+                            <span className={getIconClass('sales_history')}>receipt_long</span>
+                            <span className="font-body-md text-[13px]">Sales History</span>
+                        </div>
+                        
+                        <div className={getNavItemClass('purchases')} onClick={() => handleNavigation('purchases', <Purchase />)}>
+                            <span className={getIconClass('purchases')}>shopping_cart</span>
+                            <span className="font-body-md text-[13px]">Purchases</span>
+                        </div>
+                        
+                        <div className={getNavItemClass('suppliers')} onClick={() => handleNavigation('suppliers', <Supplier />)}>
+                            <span className={getIconClass('suppliers')}>groups</span>
+                            <span className="font-body-md text-[13px]">Suppliers</span>
+                        </div>
+
+                        <div className="my-2 border-t border-outline-variant mx-2"></div>
+                        
+                        <div className={getNavItemClass('settings')} onClick={() => handleNavigation('settings', <Bussiness />)}>
+                            <span className={getIconClass('settings')}>settings</span>
+                            <span className="font-body-md text-[13px]">Settings</span>
+                        </div>
+                    </nav>
+                </aside>
+
+                {/* Main Content */}
+                <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background md:ml-64 w-full h-full">
+                    <div className="w-full h-full">
                         {currentComponent}
                     </div>
                 </main>

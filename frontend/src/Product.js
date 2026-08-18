@@ -284,19 +284,20 @@ const Product = () => {
 
     
     return (
-        <div className="w-full">
-            <div className="mb-6 flex justify-between items-center">
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Products Management</h2>
-                    <p className="text-gray-500 mt-1">Manage your inventory, prices, and stock levels</p>
+        <div className="flex-1 overflow-y-auto p-container-margin w-full bg-background font-body-md text-on-background">
+            <div className="flex flex-col gap-gutter max-w-[1600px] mx-auto">
+                <div className="flex justify-between items-center mb-4">
+                    <div>
+                        <h2 className="font-h1 text-h1 text-on-surface">Products Management</h2>
+                        <p className="font-body-md text-on-surface-variant mt-1">Manage your inventory, prices, and stock levels</p>
+                    </div>
                 </div>
-            </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8 overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                    <h3 className="text-lg font-semibold text-gray-800">Add New Product</h3>
-                </div>
-                <div className="p-6">
+                <div className="bg-surface-container-lowest border border-outline-variant rounded-lg flex flex-col overflow-hidden mb-8">
+                    <div className="p-density-medium border-b border-outline-variant bg-surface-container-lowest">
+                        <h3 className="font-h3 text-[16px] text-on-surface">Add New Product</h3>
+                    </div>
+                    <div className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
                         <div className="space-y-1.5">
                             <label className="block text-sm font-medium text-gray-700">Supplier <span className="text-red-500">*</span></label>
@@ -371,9 +372,9 @@ const Product = () => {
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <h3 className="text-lg font-semibold text-gray-800">Product Inventory</h3>
+            <div className="bg-surface-container-lowest border border-outline-variant rounded-lg flex flex-col overflow-hidden">
+                <div className="p-density-medium border-b border-outline-variant bg-surface-container-lowest flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <h3 className="font-h3 text-[16px] text-on-surface">Product Inventory</h3>
                     <div className="flex w-full sm:w-auto">
                         <input 
                             type="text" 
@@ -454,6 +455,7 @@ const Product = () => {
                         </tbody>
                     </table>
                 </div>
+            </div>
             </div>
         </div>
     );

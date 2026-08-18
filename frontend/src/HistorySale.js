@@ -46,11 +46,12 @@ const HistorySale = () => {
     const filteredCustomers = filterCustomersByMonth(customers, selectedMonth);
 
     return (
-        <div className="w-full">
-            <div className="mb-6 flex justify-between items-center">
+        <div className="flex-1 overflow-y-auto p-container-margin w-full bg-background font-body-md text-on-background">
+            <div className="flex flex-col gap-gutter max-w-[1600px] mx-auto">
+            <div className="flex justify-between items-center mb-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Sales History</h2>
-                    <p className="text-gray-500 mt-1">View and filter all previous sales records</p>
+                    <h2 className="font-h1 text-h1 text-on-surface">Sales History</h2>
+                    <p className="font-body-md text-on-surface-variant mt-1">View and filter all previous sales records</p>
                 </div>
                 <div className="flex gap-4">
                     <select 
@@ -66,7 +67,7 @@ const HistorySale = () => {
                 </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-surface-container-lowest border border-outline-variant rounded-lg flex flex-col overflow-hidden mb-8">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
                         <thead className="text-xs text-gray-500 uppercase bg-gray-50/80 border-b border-gray-100">
@@ -134,6 +135,7 @@ const HistorySale = () => {
                         </tbody>
                     </table>
                 </div>
+            </div>
             </div>
         </div>
     );

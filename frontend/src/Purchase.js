@@ -206,18 +206,19 @@ const Purchase = () => {
     };
 
     return (
-        <div className="w-full">
-            <div className="mb-6 flex justify-between items-center">
-                <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Purchase Orders</h2>
-                    <p className="text-gray-500 mt-1">Create new purchase orders and view history</p>
+        <div className="flex-1 overflow-y-auto p-container-margin w-full bg-background font-body-md text-on-background">
+            <div className="flex flex-col gap-gutter max-w-[1600px] mx-auto">
+                <div className="flex justify-between items-center mb-4">
+                    <div>
+                        <h2 className="font-h1 text-h1 text-on-surface">Purchase Orders</h2>
+                        <p className="font-body-md text-on-surface-variant mt-1">Create new purchase orders and view history</p>
+                    </div>
                 </div>
-            </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8 overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                    <h3 className="text-lg font-semibold text-gray-800">Create Purchase Order</h3>
-                </div>
+                <div className="bg-surface-container-lowest border border-outline-variant rounded-lg flex flex-col overflow-hidden mb-8">
+                    <div className="p-density-medium border-b border-outline-variant bg-surface-container-lowest">
+                        <h3 className="font-h3 text-[16px] text-on-surface">Create Purchase Order</h3>
+                    </div>
                 
                 <div className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -364,10 +365,9 @@ const Purchase = () => {
                     </div>
                 </div>
 
-                {/* Right Side: Purchase History */}
-                <div className="w-full lg:w-2/3 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                        <h3 className="text-lg font-semibold text-gray-800">Purchase History</h3>
+                <div className="w-full lg:w-2/3 bg-surface-container-lowest rounded-lg border border-outline-variant flex flex-col overflow-hidden">
+                    <div className="p-density-medium border-b border-outline-variant bg-surface-container-lowest">
+                        <h3 className="font-h3 text-[16px] text-on-surface">Purchase History</h3>
                     </div>
                     
                     <div className="overflow-x-auto max-h-[600px]">
@@ -410,6 +410,7 @@ const Purchase = () => {
                                 )}
                             </tbody>
                         </table>
+                    </div>
                     </div>
                 </div>
             </div>

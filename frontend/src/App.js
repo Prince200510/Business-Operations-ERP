@@ -183,9 +183,9 @@ function App() {
             <div className="relative z-10">
               <div className="flex items-center gap-3 mb-16">
                 <div className="w-10 h-10 rounded-lg bg-primary-600 flex items-center justify-center shadow-lg shadow-primary-600/30">
-                  <span className="text-xl font-bold tracking-tighter">N</span>
+                  <span className="text-xl font-bold tracking-tighter">B</span>
                 </div>
-                <span className="text-2xl font-bold tracking-tight">Nexora</span>
+                <span className="text-2xl font-bold tracking-tight">Bussiness ERP</span>
               </div>
               
               <h1 className="text-4xl font-semibold mb-6 leading-tight tracking-tight">
