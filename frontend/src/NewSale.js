@@ -1,52 +1,63 @@
 import React, { useState, useEffect } from 'react';
 import { AiOutlineDelete, AiFillFileAdd } from 'react-icons/ai';
-import database from './firebase';
-import { ref, onValue, update, get, push, set } from 'firebase/database';
 import Swal from 'sweetalert2';
-import { useLocation, useNavigate, Link, Route, Routes, Outlet } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Bill from './Bill';
 
 const NewSale = () => {
     const location = useLocation();
-    const { userName } = location.state;
+    const navigate = useNavigate();
     const [currentComponent, setCurrentComponent] = useState();
     const [showContent, setShowContent] = useState(true);
-    const username = location?.state?.userName;
-    const [rows, setRows] = useState([{ id: 1 }]);
-    const [productNames, setProductNames] = useState([]);
-    const [salePrices, setSalePrices] = useState({});
-    const [quantities, setQuantities] = useState({});
+    const [rows, setRows] = useState([{ id: 1, product_id: '', quantity: 1 }]);
+    const [discount, setDiscount] = useState(0);
+    const [paymentMethod, setPaymentMethod] = useState('UPI');
     const [customerName, setCustomerName] = useState('');
     const [customerAddress, setCustomerAddress] = useState('');
-    const [discount, setDiscount] = useState(0);
-    const [custid, setcustid] = useState(0);
-    const [orderSubmitted, setOrderSubmitted] = useState(false);
+    const [products, setProducts] = useState([]);
 
+    // Customer fetch removed as they are manually entered
 
-    useEffect(() => {
-        const fetchCustomerIDs = () => {
-            const customerRef = ref(database, `${userName}Customers`);
-            onValue(customerRef, (snapshot) => {
-                if (snapshot.exists()) {
-                    const customerData = snapshot.val();
-                    const customerIDs = Object.keys(customerData).map(id => parseInt(id));
-                    const maxID = Math.max(...customerIDs);
-                    setcustid(maxID + 1); 
-                } else {
-                    setcustid(1); 
+    const fetch_products = async () => {
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/products/`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 }
             });
-        };
+            
+            if(response.status === 401) {
+                localStorage.removeItem("access_token");
+                navigate('/');
+                return;
+            }
 
-        fetchCustomerIDs();
+            const data = await response.json();
+            
+            if(!response.ok) {
+                throw new Error(data.detail || 'Failed to fetch products');
+            }
+
+            setProducts(data);
+        } catch(error) {
+            console.error(error);
+        }
+    }
+    
+    useEffect(() => {
+        fetch_products();
     }, []);
 
     const addNewRow = () => {
-        const newRow = { id: rows.length + 1 };
+        const newRow = { id: rows.length + 1, product_id: '', quantity: 1 };
         setRows([...rows, newRow]);
     };
 
     const handleDeleteRow = (id) => {
+        if(rows.length === 1) return;
         const updatedRows = rows.filter(row => row.id !== id);
         setRows(updatedRows);
     };
@@ -56,206 +67,130 @@ const NewSale = () => {
         setShowContent(false);
     };
 
+    // Customer change removed
+
     const handleProductChange = (event, id) => {
-        const selectedProductName = event.target.value;
-        const productRef = ref(database, `${userName}Products/${selectedProductName}/saleprice`);
-        onValue(productRef, (snapshot) => {
-            if (snapshot.exists()) {
-                setSalePrices(prevPrices => ({
-                    ...prevPrices,
-                    [id]: snapshot.val()
-                }));
-                setRows(prevRows => prevRows.map(row => {
-                    if (row.id === id) {
-                        return { ...row, productName: selectedProductName };
-                    }
-                    return row;
-                }));
-            } else {
-                setSalePrices(prevPrices => ({
-                    ...prevPrices,
-                    [id]: ''
-                }));
-                setRows(prevRows => prevRows.map(row => {
-                    if (row.id === id) {
-                        return { ...row, productName: '' };
-                    }
-                    return row;
-                }));
+        const selectedProductId = event.target.value;
+        setRows(prevRows => prevRows.map(row => {
+            if (row.id === id) {
+                return { ...row, product_id: selectedProductId };
             }
-        });
+            return row;
+        }));
     };
     
     const handleQuantityChange = (event, id) => {
-        const value = event.target.value;
-        const salePrice = salePrices[id] || 0; 
-        const itemTotal = parseFloat(value) * parseFloat(salePrice);
-        
-        setQuantities(prevQuantities => ({
-            ...prevQuantities,
-            [id]: value
-        }));
-    
+        const value = parseInt(event.target.value) || 0;
         setRows(prevRows => prevRows.map(row => {
             if (row.id === id) {
-                return { ...row, itemTotal: itemTotal };
+                return { ...row, quantity: value };
             }
             return row;
         }));
     };
 
     const handleFinalButtonClick = async () => {
-        if (!customerName || !customerAddress || !custid) {
+        if (!customerName || !customerAddress) {
             Swal.fire({
-                title: 'Error!',
-                text: 'Please fill in all the required fields.',
-                icon: 'error',
-                confirmButtonText: 'Ok'
+                title: "Error!",
+                text: "Please enter customer name and address",
+                icon: "error"
             });
             return;
         }
-    
-        const currentTime = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
-        const orderDetails = {
-            username: username,
-            customerName: customerName,
-            customerAddress: customerAddress,
-            date: currentTime,
-            products: [],
-            orderTotal: calculateOrderTotal(),
-            discount: discount,
-            cgst: calculateCGST(),
-            sgst: calculateSGST(),
-            finalTotal: calculateFinalTotal(),
-        };
-    
-      
-        const customerDataRef = push(ref(database, `${userName}Customers/${custid}`),null);
-        set(ref(database, `${userName}Customers/${custid}`), orderDetails)
-        .then(() => {
-        })
-    
-        let shouldSubmitData = true; 
-    
-        for (const id in quantities) {
-            if (Object.prototype.hasOwnProperty.call(quantities, id)) {
-                const selectedRow = rows.find(row => row.id === parseInt(id));
-                if (selectedRow && selectedRow.productName) {
-                    const selectedProductName = selectedRow.productName;
-                    const productRef = ref(database, `${userName}Products/${selectedProductName}`);
-                    const snapshot = await get(productRef);
-                    if (snapshot.exists()) {
-                        const productData = snapshot.val();
-                        const requestedQuantity = parseInt(quantities[id]);
-                        if (productData.quantity <= 0 || requestedQuantity > productData.quantity) {
-                            // Product is out of stock or requested quantity exceeds available quantity
-                            shouldSubmitData = false;
-                            Swal.fire({
-                                title: 'Out of Stock!',
-                                text: 'One or more selected products are out of stock or requested quantity exceeds available quantity.',
-                                icon: 'warning',
-                                confirmButtonText: 'Ok'
-                            });
-                            break; // Exit the loop
-                        }
-                        const updatedQuantity = productData.quantity - requestedQuantity;
-                        update(ref(database), { [`${userName}Products/${selectedProductName}/quantity`]: updatedQuantity });
-                        orderDetails.products.push({
-                            productName: selectedProductName,
-                            salePrice: productData.saleprice,
-                            quantity: requestedQuantity,
-                            itemTotal: parseFloat(productData.saleprice) * requestedQuantity
-                        });
 
-                    }
-                }
-            }
+        const validItems = rows.filter(
+            row => row.product_id && row.quantity > 0
+        );
+
+        if (validItems.length === 0) {
+            Swal.fire({
+                title: "Error!",
+                text: "Please add at least one product",
+                icon: "error"
+            });
+            return;
         }
-    
-        if (shouldSubmitData) {
-            setCustomerName('');
-            setCustomerAddress('');
-            setcustid(0);
-            setRows([{ id: 1 }]);
-            setDiscount(0);
-            setQuantities({});
-            setSalePrices({});
-            setOrderSubmitted(true); 
+
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            navigate("/");
+            return;
+        }
+
+        try {
+            const response = await fetch(
+                `${process.env.REACT_APP_API_URL}/sales/`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        customer_name: customerName,
+                        customer_address: customerAddress,
+                        items: validItems.map(
+                            row => ({
+                                product_id: Number(row.product_id),
+                                quantity: Number(row.quantity)
+                            })
+                        ),
+                        discount: Number(discount || 0),
+                        payment_method: paymentMethod
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || "Failed to create sale");
+            }
 
             Swal.fire({
-                title: 'Success!',
-                text: 'Sale order has been placed successfully.',
-                icon: 'success',
-                confirmButtonText: 'Ok'
+                title: "Sale Created!",
+                text: `Sale Order #${data.id} created successfully.`,
+                icon: "success"
             });
-    
-            // Update order details in database
-            update(customerDataRef, orderDetails)
-            set(ref(database, `${userName}Customers/${custid}`), orderDetails)
-                .then(() => {
-                    console.log("Order details submitted successfully:", orderDetails);
-                })
-                .catch(error => {
-                    console.error("Error submitting order details:", error);
-                    Swal.fire({
-                        title: 'Error!',
-                        text: 'Failed to submit sale order. Please try again.',
-                        icon: 'error',
-                        confirmButtonText: 'Ok'
-                    });
-                });
-        } else {
-            // Clear the customer data reference if submission is not required
-            set(ref(database, `${userName}Customers/${custid}`), null);
+
+            console.log("Sale response:", data);
+
+            // Refresh product stock
+            await fetch_products();
+
+            // Reset form
+            setCustomerName('');
+            setCustomerAddress('');
+            setRows([{ id: 1, product_id: '', quantity: 1 }]);
+            setDiscount(0);
+            setPaymentMethod('UPI');
+        } catch (error) {
+            console.error("Sale API error:", error);
+            Swal.fire({
+                title: "Error!",
+                text: error.message,
+                icon: "error"
+            });
         }
     };
-    
-    
-    useEffect(() => {
-        const productRef = ref(database, `${userName}Products`);
-        onValue(productRef, (snapshot) => {
-            if (snapshot.exists()) {
-                const data = snapshot.val();
-                const productNamesArray = Object.keys(data);
-                setProductNames(productNamesArray);
-            } else {
-                setProductNames([]);
-            }
-        });
-    }, []);
 
     const calculateOrderTotal = () => {
         let total = 0;
         for (const row of rows) {
-            total += row.itemTotal || 0;
+            if(row.product_id) {
+                const product = products.find(p => p.id === Number(row.product_id));
+                if(product) {
+                    total += (product.sale_price * row.quantity);
+                }
+            }
         }
         return total;
     };
     
-    const calculateCGST = () => {
-        const orderTotal = calculateOrderTotal();
-        const cgst = orderTotal * 0.08;
-        return cgst.toFixed(2);
-    };
-    
-    const calculateSGST = () => {
-        const orderTotal = calculateOrderTotal();
-        const sgst = orderTotal * 0.08;
-        return sgst.toFixed(2);
-    };
-    
-    const calculateFinalTotal = () => {
-        const orderTotal = calculateOrderTotal();
-        const discountAmount = discount || 0;
-        const cgst = orderTotal * 0.08;
-        const sgst = orderTotal * 0.08;
-        const finalTotal = orderTotal - discountAmount + cgst + sgst;
-        return finalTotal.toFixed(2);
-    };
-    
     return (
         <div className="flex-1 overflow-y-auto p-container-margin w-full bg-background font-body-md text-on-background">
-            {showContent && (
+            {showContent ? (
                 <div className="flex flex-col gap-gutter max-w-[1600px] mx-auto">
                     <div className="flex justify-between items-center mb-4">
                         <div>
@@ -270,34 +205,25 @@ const NewSale = () => {
                         </div>
                         
                         <div className="p-6">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                                <div className="space-y-1.5">
-                                    <label className="block text-sm font-medium text-gray-700">Customer ID</label>
-                                    <input 
-                                        type="text" 
-                                        value={custid} 
-                                        readOnly
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 text-sm outline-none"
-                                    />
-                                </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                                 <div className="space-y-1.5">
                                     <label className="block text-sm font-medium text-gray-700">Customer Name <span className="text-red-500">*</span></label>
                                     <input 
                                         type="text" 
-                                        placeholder="Enter customer name" 
                                         value={customerName} 
                                         onChange={(e) => setCustomerName(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm"
+                                        placeholder="Enter customer name"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm bg-white"
                                     />
                                 </div>
                                 <div className="space-y-1.5">
                                     <label className="block text-sm font-medium text-gray-700">Address <span className="text-red-500">*</span></label>
                                     <input 
                                         type="text" 
-                                        placeholder="Enter customer address" 
                                         value={customerAddress} 
                                         onChange={(e) => setCustomerAddress(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm"
+                                        placeholder="Enter customer address"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm bg-white"
                                     />
                                 </div>
                             </div>
@@ -315,23 +241,28 @@ const NewSale = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {rows.map(row => (
+                                            {rows.map(row => {
+                                                const product = products.find(p => p.id === Number(row.product_id));
+                                                const salePrice = product ? product.sale_price : 0;
+                                                const itemTotal = salePrice * row.quantity;
+                                                return (
                                                 <tr key={row.id} className="bg-white border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
                                                     <td className="px-4 py-3">
                                                         <select 
+                                                            value={row.product_id}
                                                             onChange={(event) => handleProductChange(event, row.id)}
                                                             className="w-full px-3 py-1.5 border border-gray-200 rounded focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm bg-white"
                                                         >
                                                             <option value="">Select Product</option>
-                                                            {productNames.map(productName => (
-                                                                <option key={productName} value={productName}>{productName}</option>
+                                                            {products.map(p => (
+                                                                <option key={p.id} value={p.id}>{p.name}</option>
                                                             ))}
                                                         </select>
                                                     </td>
                                                     <td className="px-4 py-3">
                                                         <input 
                                                             type="text" 
-                                                            value={salePrices[row.id] || ''} 
+                                                            value={salePrice || ''} 
                                                             placeholder="0.00" 
                                                             readOnly 
                                                             className="w-full px-3 py-1.5 border border-gray-200 rounded bg-gray-50 text-gray-500 outline-none text-sm"
@@ -340,7 +271,8 @@ const NewSale = () => {
                                                     <td className="px-4 py-3">
                                                         <input 
                                                             type="number" 
-                                                            placeholder="0" 
+                                                            placeholder="0"
+                                                            value={row.quantity}
                                                             onChange={(event) => handleQuantityChange(event, row.id)} 
                                                             className="w-full px-3 py-1.5 border border-gray-200 rounded focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm"
                                                         />
@@ -348,7 +280,7 @@ const NewSale = () => {
                                                     <td className="px-4 py-3">
                                                         <input 
                                                             type="text" 
-                                                            value={row.itemTotal || ''} 
+                                                            value={itemTotal || ''} 
                                                             placeholder="0.00" 
                                                             readOnly 
                                                             className="w-full px-3 py-1.5 border border-gray-200 rounded bg-gray-50 text-gray-500 outline-none text-sm font-medium"
@@ -364,7 +296,7 @@ const NewSale = () => {
                                                         </button>
                                                     </td>
                                                 </tr>
-                                            ))}
+                                            )})}
                                         </tbody>
                                     </table>
                                 </div>
@@ -381,11 +313,15 @@ const NewSale = () => {
                             <div className="flex flex-col md:flex-row justify-between items-start gap-6 mt-6">
                                 <div className="w-full md:w-1/2 space-y-4">
                                     <label className="block text-sm font-medium text-gray-700">Payment Method</label>
-                                    <select className="w-full max-w-xs px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm bg-white">
-                                        <option value="1">Cash Payment</option>
-                                        <option value="2">Cheque Payment</option>
-                                        <option value="3">UPI Payment</option>
-                                        <option value="4">Google Pay Payment</option>
+                                    <select 
+                                        value={paymentMethod}
+                                        onChange={(e) => setPaymentMethod(e.target.value)}
+                                        className="w-full max-w-xs px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm bg-white"
+                                    >
+                                        <option value="Cash">Cash</option>
+                                        <option value="Cheque">Cheque</option>
+                                        <option value="UPI">UPI</option>
+                                        <option value="Bank Transfer">Bank Transfer</option>
                                     </select>
                                 </div>
                                 <div className="w-full md:w-80 bg-gray-50 p-6 rounded-lg border border-gray-100 space-y-4">
@@ -397,25 +333,7 @@ const NewSale = () => {
                                         <label className="text-sm font-medium text-gray-600">Discount</label>
                                         <input type="number" value={discount} onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)} className="w-32 px-3 py-1.5 border border-gray-200 rounded focus:ring-2 focus:ring-primary-500 outline-none text-sm text-right bg-white" placeholder="0.00" />
                                     </div>
-                                    <div className="flex justify-between items-center">
-                                        <label className="text-sm font-medium text-gray-600">CGST (8%)</label>
-                                        <input type="text" value={calculateCGST()} readOnly className="w-32 px-3 py-1.5 border border-gray-200 rounded bg-white text-right outline-none text-sm font-medium" placeholder="0.00" />
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <label className="text-sm font-medium text-gray-600">SGST (8%)</label>
-                                        <input type="text" value={calculateSGST()} readOnly className="w-32 px-3 py-1.5 border border-gray-200 rounded bg-white text-right outline-none text-sm font-medium" placeholder="0.00" />
-                                    </div>
-                                    <div className="pt-4 border-t border-gray-200 flex justify-between items-center">
-                                        <label className="text-base font-bold text-gray-900">Final Total</label>
-                                        <span className="text-xl font-bold text-gray-900">₹{calculateFinalTotal()}</span>
-                                    </div>
                                     <div className="pt-4 flex gap-3">
-                                        <button 
-                                            onClick={handleviewbill}
-                                            className="flex-1 py-2 px-4 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 font-medium rounded-lg shadow-sm transition-colors text-sm"
-                                        >
-                                            View Bill
-                                        </button>
                                         <button 
                                             onClick={handleFinalButtonClick}
                                             className="flex-1 py-2 px-4 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg shadow-sm transition-colors text-sm"
@@ -428,8 +346,7 @@ const NewSale = () => {
                         </div>
                     </div>
                 </div>
-            )}
-            {currentComponent}
+            ) : currentComponent}
         </div>
     );
 };

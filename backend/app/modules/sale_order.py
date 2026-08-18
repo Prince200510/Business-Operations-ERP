@@ -8,7 +8,7 @@ class SaleOrder(Base):
     __tablename__ = "sale_orders"
     
     id: Mapped[int] = mapped_column(primary_key = True, index = True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("user_id", ondelete = "CASCADE"), nullable = False, index = True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete = "CASCADE"), nullable = False, index = True)
     customer_id: Mapped[int] = mapped_column(ForeignKey("customers.id"), nullable = False, index = True)
     order_total: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable = False)
     discount: Mapped[Decimal] = mapped_column(Numeric(12, 2), default = 0, nullable = False)
