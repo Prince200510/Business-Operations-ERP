@@ -9,3 +9,13 @@ url:
 Authentication
 POST /api/v1/auth/register
 POST /api/v1/auth/login
+
+SUPPLIERS
+GET /api/v1/suppliers/
+POST /api/v1/suppliers/
+DELETE /api/v1/suppliers/{supplier_id}
+
+PRODUCTS
+GET /api/v1/products/
+POST /api/v1/products/
+DELETE /api/v1/products/{product_id}

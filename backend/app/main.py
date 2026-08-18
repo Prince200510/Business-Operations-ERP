@@ -4,6 +4,7 @@ from app.api.router import api_router
 from app.core.database import Base, engine
 from app.api.auth import router as auth_router
 from app.api.suppliers import router as suppliers_router
+from app.api.products import router as products_router
 from fastapi.middleware.cors import CORSMiddleware
 
 redis = get_redis()
@@ -21,6 +22,7 @@ Base.metadata.create_all(bind = engine)
 app.include_router(api_router)
 app.include_router(auth_router)
 app.include_router(suppliers_router)
+app.include_router(products_router)
 
 @app.get("/")
 def root():
