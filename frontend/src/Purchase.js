@@ -1,13 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import database from './firebase';
-import { ref, onValue, push, set } from 'firebase/database';
 import { AiOutlineDelete } from 'react-icons/ai';
 import Swal from 'sweetalert2';
-import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const Purchase = () => {
-    const location = useLocation();
-    const { userName } = location.state; 
+    const navigate = useNavigate();
     const [supplierNames, setSupplierNames] = useState([]);
     const [selectedSupplier, setSelectedSupplier] = useState('');
     const [selectedSupplierAddress, setSelectedSupplierAddress] = useState('');
@@ -18,31 +15,64 @@ const Purchase = () => {
     const [discount, setDiscount] = useState('');
     const [finalTotal, setFinalTotal] = useState('');
     const [paymentMethod, setPaymentMethod] = useState('');
+    const [products, setProducts] = useState([]);
+    const [selectedProduct, setSelectedProduct] = useState('');
 
-    useEffect(() => {
-        const suppliersRef = ref(database, `${userName}suppliers`);
-        onValue(suppliersRef, (snapshot) => {
-            if (snapshot.exists()) {
-                const data = snapshot.val();
-                const supplierNamesArray = Object.keys(data);
-                setSupplierNames(supplierNamesArray);
-            } else {
-                setSupplierNames([]);
+    const fetch_supplier = async () => {
+        const token = localStorage.getItem('access_token');
+
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/suppliers/`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
             }
         });
+
+        if(response.status === 401) {
+            localStorage.removeItem('access_token');
+            navigate('/');
+            return;
+        }
+
+        const data = await response.json();
+
+        if(!response.ok) {
+            throw new Error(data.detail || 'Failed to fetch suppliers');
+        }
+        setSupplierNames(data);
+    };
+
+    const fetch_products = async () => {
+        const token = localStorage.getItem('access_token');
+
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/products/`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        const data = await response.json();
+
+        if(!response.ok) {
+            throw new Error(data.detail || 'Failed to fetch products');
+        }
+        setProducts(data);
+    };
+
+    useEffect(() => {
+        fetch_supplier();
+        fetch_products();
     }, []);
 
     const handleSupplierChange = (event) => {
-        const selectedSupplierName = event.target.value;
-        setSelectedSupplier(selectedSupplierName);
-        const supplierRef = ref(database, `${userName}suppliers/${selectedSupplierName}/address`);
-        onValue(supplierRef, (snapshot) => {
-            if (snapshot.exists()) {
-                setSelectedSupplierAddress(snapshot.val());
-            } else {
-                setSelectedSupplierAddress('');
-            }
-        });
+        const supplier_id = Number(event.target.value);
+        setSelectedSupplier(supplier_id);
+        const supplier = supplierNames.find(supplier => supplier.id === supplier_id);
+
+        if(supplier) {
+            setSelectedSupplierAddress(supplier.address);
+        } else {
+            setSelectedSupplierAddress('');
+        }
     };
 
     const handleItemPriceChange = (event) => {
@@ -78,8 +108,8 @@ const Purchase = () => {
         return currentIST;
     };
 
-    const handleSave = () => {
-        if (!selectedSupplier || !selectedSupplierAddress || !itemName || !itemPrice || !itemQuantity || !itemTotal || !discount || !finalTotal) {
+    const handleSave = async () => {
+        if (!selectedSupplier || !itemName || !itemPrice || !itemQuantity || !discount) {
             Swal.fire({
                 title: 'Error!',
                 text: 'Please fill all the details',
@@ -89,43 +119,55 @@ const Purchase = () => {
             return;
         }
 
-        const currentIST = getCurrentISTDateTime();
+        const token = localStorage.getItem('access_token');
 
-        const purchaseData = {
-            supplierName: selectedSupplier,
-            supplierAddress: selectedSupplierAddress,
-            itemName,
-            itemPrice,
-            itemQuantity,
-            itemTotal,
-            discount,
-            finalTotal,
-            paymentMethod,
-            dateTime: currentIST 
-        };
+        if(!token) {
+            navigate('/');
+            return;
+        }
 
-        const newPurchaseRef = push(ref(database, `${userName}purchase/${itemName}`), null);
-        const purchaseKey = newPurchaseRef.key;
-
-        set(ref(database, `${userName}purchase/${itemName}`), purchaseData)
-            .then(() => {
-                Swal.fire({
-                    title: "Your data has been recorded",
-                    icon: "success"
-                });
-                setSelectedSupplier('');
-                setSelectedSupplierAddress('');
-                setItemName('');
-                setItemPrice('');
-                setItemQuantity('');
-                setItemTotal('');
-                setDiscount('');
-                setFinalTotal('');
-                setPaymentMethod('');
-            })
-            .catch((error) => {
-                console.error('Error saving purchase data:', error);
+        try {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/purchases/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`      
+                },
+                body: JSON.stringify({
+                    supplier_id: Number(selectedSupplier),
+                    product_name: itemName,
+                    quantity: Number(itemQuantity),
+                    purchase_price: Number(itemPrice),
+                    discount: Number(discount),
+                    payment_method: paymentMethod,
+                })
             });
+
+            const data = await response.json();
+
+            if(!response.ok) {
+                throw new Error(data.detail || 'Failed to save purchase order');
+            }
+
+            Swal.fire({
+                title: 'Success!',
+                text: 'Purchase order saved successfully',
+                icon: 'success',
+                confirmButtonText: 'Ok'
+            }).then(() => {
+                handleclear();
+            });
+
+            fetch_products();
+        } catch(error) {
+            Swal.fire({
+                title: 'Error!',
+                text: error.message || 'Failed to save purchase order',
+                icon: 'error',
+                confirmButtonText: 'Ok'
+            });
+            console.error(error);
+        }
     };
 
     const handlePaymentMethodChange = (event) => {
@@ -154,8 +196,8 @@ const Purchase = () => {
                             <label>Supplier Name</label><br />
                             <select name="name" onChange={handleSupplierChange} value={selectedSupplier}>
                                 <option value="">Select Supplier</option>
-                                {supplierNames.map((supplierName, index) => (
-                                    <option key={index} value={supplierName}>{supplierName}</option>
+                                {supplierNames.map((supplier) => (
+                                    <option key={supplier.id} value={supplier.id}>{supplier.name}</option>
                                 ))}
                             </select>
                         </div>
@@ -178,7 +220,7 @@ const Purchase = () => {
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td><input type="text" placeholder='Product Name' size='18' value={itemName} onChange={(e) => setItemName(e.target.value)}></input></td>
+                                        <td><input type="text" placeholder='Product Name' value={itemName} onChange={(e) => setItemName(e.target.value)}></input></td>
                                         <td><input type="text" placeholder='Price' size="8" value={itemPrice} onChange={handleItemPriceChange}></input></td>
                                         <td><input type="text" placeholder='Qtn.' size="3" value={itemQuantity} onChange={handleItemQuantityChange}></input></td>
                                         <td><input type="text" placeholder='₹' size="6" value={itemTotal} readOnly></input></td>
