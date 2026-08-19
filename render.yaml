@@ -1,0 +1,26 @@
+databases:
+  - name: nexora-postgres
+    databaseName: business_operations
+    user: erp_user
+    plan: free
+  - name: nexora-redis
+    type: keyvalue
+    plan: free
+
+services:
+  - type: web
+    name: nexora-backend
+    env: python
+    buildCommand: "cd backend && pip install -r requirements.txt"
+    startCommand: "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nexora-postgres
+          property: connectionString
+          
+      - key: REDIS_URL
+        fromDatabase:
+          name: nexora-redis
+          property: connectionString
