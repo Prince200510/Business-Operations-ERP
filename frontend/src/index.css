@@ -7,3 +7,24 @@
     @apply bg-gray-50 text-gray-900 antialiased;
   }
 }
+
+@media print {
+  @page {
+    margin: 1cm;
+  }
+  
+  body * {
+    visibility: hidden;
+  }
+  
+  #printable-invoice, #printable-invoice * {
+    visibility: visible;
+  }
+  
+  #printable-invoice {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}

@@ -11,6 +11,7 @@ import Purchase from './Purchase';
 import NewSale from './NewSale.js';
 import HistorySale from './HistorySale';
 import Bussiness from './Bussiness.js';
+import Invoices from './Invoices.js';
 
 const Dashboard = () => {
     const location = useLocation();
@@ -125,6 +126,11 @@ const Dashboard = () => {
                         <div className={getNavItemClass('sales_history')} onClick={() => handleNavigation('sales_history', <HistorySale />)}>
                             <span className={getIconClass('sales_history')}>receipt_long</span>
                             <span className="font-body-md text-[13px]">Sales History</span>
+                        </div>
+                        
+                        <div className={getNavItemClass('invoices')} onClick={() => handleNavigation('invoices', <Invoices />)}>
+                            <span className={getIconClass('invoices')}>description</span>
+                            <span className="font-body-md text-[13px]">Invoices</span>
                         </div>
                         
                         <div className={getNavItemClass('purchases')} onClick={() => handleNavigation('purchases', <Purchase />)}>

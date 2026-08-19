@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { AiOutlineDelete, AiFillFileAdd } from 'react-icons/ai';
 import Swal from 'sweetalert2';
 import { useLocation, useNavigate } from 'react-router-dom';
-import Bill from './Bill';
 
 const NewSale = () => {
     const location = useLocation();
@@ -58,11 +57,6 @@ const NewSale = () => {
         if(rows.length === 1) return;
         const updatedRows = rows.filter(row => row.id !== id);
         setRows(updatedRows);
-    };
-
-    const handleviewbill = () => {
-        setCurrentComponent(<Bill />);
-        setShowContent(false);
     };
 
     const handleProductChange = (event, id) => {
@@ -152,10 +146,7 @@ const NewSale = () => {
 
             console.log("Sale response:", data);
 
-            // Refresh product stock
             await fetch_products();
-
-            // Reset form
             setCustomerName('');
             setCustomerAddress('');
             setRows([{ id: 1, product_id: '', quantity: 1 }]);

@@ -7,6 +7,7 @@ from app.modules.customer import Customer
 from app.modules.product import Product
 from app.modules.sale_order import SaleOrder
 from app.modules.sale_order_item import SaleOrderItem
+from app.modules.Business import Business
 from app.schemas.sale_order import SaleOrderCreate, SaleOrderResponse
 
 router = APIRouter(prefix = "/api/v1/sales", tags = ["Sales"])
@@ -91,3 +92,48 @@ def get_sale(sale_id: int, db: Session = Depends(get_db), user_id: int = Depends
         raise HTTPException(status_code = 404, detail = "Sale order not found")
     
     return sale
+
+@router.get("/{sale_id}/invoice")
+def get_sale_invoice(sale_id: int, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
+    sale = (db.query(SaleOrder).filter(SaleOrder.id == sale_id, SaleOrder.user_id == user_id).first())
+    if not sale:
+        raise HTTPException(status_code = 404, detail = "Sale order not found")
+        
+    customer = (db.query(Customer).filter(Customer.id == sale.customer_id).first())
+    business = (db.query(Business).filter(Business.user_id == user_id).first())
+    
+    items_data = []
+    for item in sale.items:
+        product = db.query(Product).filter(Product.id == item.product_id).first()
+        items_data.append({
+            "product_name": product.name if product else "Unknown Product",
+            "quantity": float(item.quantity),
+            "unit_price": float(item.sale_price),
+            "item_total": float(item.item_total)
+        })
+        
+    return {
+        "invoice_number": f"INV-{sale.id:06d}",
+        "date": sale.created_at.isoformat(),
+        "payment_method": sale.payment_method,
+        "totals": {
+            "subtotal": float(sale.order_total),
+            "discount": float(sale.discount),
+            "cgst": float(sale.cgst),
+            "sgst": float(sale.sgst),
+            "final_total": float(sale.final_total)
+        },
+        "customer": {
+            "name": customer.name if customer else "Cash Customer",
+            "address": customer.address if customer else ""
+        },
+        "business": {
+            "name": business.name if business else "Your Company Name",
+            "business_name": business.business_name if business else "Your Business",
+            "address": business.address if business else "",
+            "phone_no1": business.phone_no1 if business else "",
+            "email_id": business.email_id if business else "",
+            "website": business.website_link if business else ""
+        },
+        "items": items_data
+    }

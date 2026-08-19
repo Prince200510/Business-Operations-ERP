@@ -15,7 +15,6 @@ from redis import Redis
 from app.core.redis import get_redis
 import json
 
-
 router = APIRouter(prefix = "/api/v1/reports", tags = ["Reports"])
 
 @router.post("/dashboard/refresh")
