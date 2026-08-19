@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import database from './firebase';
-import { ref, get, set } from 'firebase/database';
 import Swal from 'sweetalert2';
 import { useNavigate, useLocation } from 'react-router-dom';
 
