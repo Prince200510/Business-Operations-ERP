@@ -1,13 +1,17 @@
 databases:
+  # 1. Managed PostgreSQL Database
   - name: nexora-postgres
     databaseName: business_operations
     user: erp_user
     plan: free
-  - name: nexora-redis
-    type: keyvalue
-    plan: free
 
 services:
+  # 2. Managed Redis Cache
+  - type: keyvalue
+    name: nexora-redis
+    plan: free
+
+  # 3. Python FastAPI Backend
   - type: web
     name: nexora-backend
     env: python
@@ -15,12 +19,15 @@ services:
     startCommand: "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     plan: free
     envVars:
+      # Automatically inject the internal PostgreSQL connection string
       - key: DATABASE_URL
         fromDatabase:
           name: nexora-postgres
           property: connectionString
           
+      # Automatically inject the internal Redis connection string
       - key: REDIS_URL
-        fromDatabase:
+        fromService:
+          type: keyvalue
           name: nexora-redis
           property: connectionString
