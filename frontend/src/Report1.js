@@ -11,6 +11,7 @@ const Report1 = () => {
     const [quantity, setQuantity] = useState(0);
     const [chartType, setChartType] = useState('bar');
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState('');
 
     const fetch_dashboard = async () => {
@@ -55,6 +56,27 @@ const Report1 = () => {
     useEffect(() => {
         fetch_dashboard();
     }, []);
+
+    const handleRefresh = async () => {
+        try {
+            setRefreshing(true);
+            const token = localStorage.getItem('access_token');
+            if(!token) return;
+            
+            await fetch(`${process.env.REACT_APP_API_URL}/reports/dashboard/refresh`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            await fetch_dashboard();
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setRefreshing(false);
+        }
+    };
 
     const prepare_sales_data = () => {
         const data = Array(12).fill(0);
@@ -101,6 +123,21 @@ const Report1 = () => {
     return (
         <div className="flex-1 overflow-y-auto p-container-margin w-full bg-background font-body-md text-on-background">
             <div className="flex flex-col gap-gutter max-w-[1600px] mx-auto">
+                <div className="flex justify-between items-center mb-4">
+                    <div>
+                        <h2 className="font-h1 text-h1 text-on-surface">Dashboard Overview</h2>
+                        <p className="font-body-md text-on-surface-variant mt-1">Real-time summary of your business performance</p>
+                    </div>
+                    <button 
+                        onClick={handleRefresh}
+                        disabled={refreshing}
+                        className="px-4 py-2 bg-primary text-white rounded-lg shadow-sm font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors disabled:opacity-50"
+                    >
+                        <span className={`material-symbols-outlined text-[18px] ${refreshing ? 'animate-spin' : ''}`}>refresh</span>
+                        Refresh Data
+                    </button>
+                </div>
+                
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
                     <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-density-medium flex flex-col gap-2 relative overflow-hidden">
                         <div className="flex justify-between items-start">

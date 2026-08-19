@@ -11,11 +11,27 @@ from app.modules.customer import Customer
 from app.modules.product import Product
 from app.modules.supplier import Supplier
 from app.modules.purchase import Purchase
+from redis import Redis
+from app.core.redis import get_redis
+import json
+
 
 router = APIRouter(prefix = "/api/v1/reports", tags = ["Reports"])
 
+@router.post("/dashboard/refresh")
+def invalidate_dashboard(user_id: int = Depends(get_current_user_id), redis_client: Redis = Depends(get_redis)):
+    cache_key = f"dashboard_report_{user_id}"
+    redis_client.delete(cache_key)
+    return {"message": "Dashboard cache cleared successfully"}
+
 @router.get("/dashboard")
-def get_dashbaord_report(db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
+def get_dashbaord_report(db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id), redis_client: Redis = Depends(get_redis)):
+    cache_key = f"dashboard_report_{user_id}"
+    cached_data = redis_client.get(cache_key)
+    
+    if cached_data:
+        return json.loads(cached_data) 
+    
     now = datetime.utcnow()
     current_month = now.month
     current_year = now.year
@@ -75,14 +91,7 @@ def get_dashbaord_report(db: Session = Depends(get_db), user_id: int = Depends(g
             "date": sale.created_at
         })
     
-    
-    
-    
-    
-        
-    total_sales = (db.query(func.count(SaleOrder.id)).filter(SaleOrder.user_id == user_id).scalar()) or 0
     sales_this_month = (db.query(func.count(SaleOrder.id)).filter(SaleOrder.user_id == user_id, extract("month", SaleOrder.created_at) == current_month, extract("year", SaleOrder.created_at) == current_year).scalar()) or 0
-    total_purchases = 0
     active_suppliers = (db.query(func.count(Supplier.id)).filter(Supplier.user_id == user_id).scalar()) or 0
     products = (db.query(Product).filter(Product.user_id == user_id).order_by(Product.id.desc()).all())
     
@@ -94,8 +103,9 @@ def get_dashbaord_report(db: Session = Depends(get_db), user_id: int = Depends(g
     products_data = []
     for product in products:
         products_data.append({"id": product.id, "name": product.name, "supplier_id": product.supplier_id, "sale_price": float(product.sale_price), "quantity": float(product.quantity)})
-        
-    return {
+    
+    
+    response_data = {
         "summary": {
             "total_revenue": float(total_revenue),
             "total_sales_orders": total_sales_orders,
@@ -114,3 +124,8 @@ def get_dashbaord_report(db: Session = Depends(get_db), user_id: int = Depends(g
         "monthly_sales": monthly_sales,
         "products": products_data
     }
+    
+    redis_client.setex(cache_key, 300, json.dumps(response_data, default = str))
+    
+    return response_data
+    
