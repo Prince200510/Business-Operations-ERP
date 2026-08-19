@@ -20,6 +20,10 @@ services:
     startCommand: "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     plan: free
     envVars:
+      # Automatically generate a secure 64-character secret key for JWT/auth
+      - key: SECRET_KEY
+        generateValue: true
+        
       # Automatically inject the internal PostgreSQL connection string
       - key: DATABASE_URL
         fromDatabase:
