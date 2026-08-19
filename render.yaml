@@ -10,6 +10,7 @@ services:
   - type: keyvalue
     name: nexora-redis
     plan: free
+    ipAllowList: []
 
   # 3. Python FastAPI Backend
   - type: web
