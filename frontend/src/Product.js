@@ -404,6 +404,7 @@ const Product = () => {
                                 <th className="px-6 py-4 font-semibold text-right">Sale (₹)</th>
                                 <th className="px-6 py-4 font-semibold text-right">Total Purchase (₹)</th>
                                 <th className="px-6 py-4 font-semibold text-right">Total Sale (₹)</th>
+                                <th className="px-6 py-4 font-semibold text-right text-emerald-600">Total Profit (₹)</th>
                                 <th className="px-6 py-4 font-semibold text-center">Actions</th>
                             </tr>
                         </thead>
@@ -423,6 +424,7 @@ const Product = () => {
                                         <td className="px-6 py-4 text-gray-600 text-right">{parseFloat(Product.sale_price).toFixed(2)}</td>
                                         <td className="px-6 py-4 font-medium text-gray-700 text-right">{calculateTotalPurchasePrice(Product.quantity, Product.purchase_price)}</td>
                                         <td className="px-6 py-4 font-medium text-gray-700 text-right">{calculateTotalSalePrice(Product.quantity, Product.sale_price)}</td>
+                                        <td className="px-6 py-4 font-bold text-emerald-600 text-right">{parseFloat(Product.total_profit).toFixed(2)}</td>
                                         <td className="px-6 py-4 text-center">
                                             <button 
                                                 onClick={() => handleDeleteProduct(Product.id)}
@@ -436,7 +438,7 @@ const Product = () => {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="9" className="px-6 py-8 text-center text-gray-500">
+                                    <td colSpan="10" className="px-6 py-8 text-center text-gray-500">
                                         No products found matching your search.
                                     </td>
                                 </tr>
@@ -448,7 +450,8 @@ const Product = () => {
                                     <td className="px-6 py-4 text-right text-gray-900">{purchase}</td>
                                     <td className="px-6 py-4 text-right text-gray-900">{sales}</td>
                                     <td className="px-6 py-4 text-right text-primary-700">{totalPurchase}</td>
-                                    <td className="px-6 py-4 text-right text-emerald-600">{totalSales}</td>
+                                    <td className="px-6 py-4 text-right text-gray-900">{totalSales}</td>
+                                    <td className="px-6 py-4 text-right text-emerald-600">{totalProfit}</td>
                                     <td className="px-6 py-4"></td>
                                 </tr>
                             )}

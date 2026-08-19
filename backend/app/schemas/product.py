@@ -15,6 +15,7 @@ class ProductResponse(BaseModel):
     purchase_price: Decimal
     sale_price: Decimal
     quantity: int
+    total_profit: Decimal
     
     class Config:
         from_attributes = True

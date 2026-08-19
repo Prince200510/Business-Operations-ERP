@@ -32,12 +32,12 @@ def get_dashbaord_report(db: Session = Depends(get_db), user_id: int = Depends(g
     
     monthy_sales_revenue = []
     for month in range(1, 13):
-        revenue = (db.query(func.coalesce(func.sum(SaleOrder.final_total), 0)).filter(SaleOrder.user_id == user_id, extract("month", SaleOrder.created_at) == current_month, extract("year", SaleOrder.created_at) == current_year).scalar())
+        revenue = (db.query(func.coalesce(func.sum(SaleOrder.final_total), 0)).filter(SaleOrder.user_id == user_id, extract("month", SaleOrder.created_at) == month, extract("year", SaleOrder.created_at) == current_year).scalar())
         monthy_sales_revenue.append({"month": month, "revenue": revenue or 0})
     
     monthly_purchase_orders = []
     for month in range(1, 13):
-        purchase_total = (db.query(func.coalesce(func.sum(Purchase.final_total), 0)).filter(Purchase.user_id == user_id, extract("month", Purchase.created_at) == current_month, extract("year", Purchase.created_at) == current_year).scalar())
+        purchase_total = (db.query(func.coalesce(func.sum(Purchase.final_total), 0)).filter(Purchase.user_id == user_id, extract("month", Purchase.created_at) == month, extract("year", Purchase.created_at) == current_year).scalar())
         monthly_purchase_orders.append({"month": month, "revenue": float(purchase_total or 0)})
 
     top_products = (db.query(Product.id, Product.name, func.sum(SaleOrderItem.quantity).label("total_quantity"), func.sum(SaleOrderItem.item_total).label("total_revenue")).join(SaleOrderItem, SaleOrderItem.product_id == Product.id).join(SaleOrder, SaleOrder.id == SaleOrderItem.sale_order_id).filter(Product.user_id == user_id).group_by(Product.id, Product.name).order_by(func.sum(SaleOrderItem.quantity).desc()).limit(5).all())

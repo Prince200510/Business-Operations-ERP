@@ -11,7 +11,21 @@ router = APIRouter(prefix="/api/v1/products", tags=["Products"])
 @router.get("/", response_model = list[ProductResponse])
 def get_products(db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
     products = (db.query(Product).filter(Product.user_id == user_id).all())
-    return products
+    
+    product_data = []
+    for product in products:
+        total_profit = (product.sale_price - product.purchase_price) * product.quantity
+        product_data.append({
+            "id": product.id,
+            "supplier_id": product.supplier_id,
+            "name": product.name,
+            "purchase_price": product.purchase_price,
+            "sale_price": product.sale_price,
+            "quantity": product.quantity,
+            "total_profit": total_profit
+        })
+        
+    return product_data
 
 @router.post("/", response_model = ProductResponse, status_code = 201)
 def create_product(product_data: ProductCreate, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
@@ -33,7 +47,17 @@ def create_product(product_data: ProductCreate, db: Session = Depends(get_db), u
     db.commit()
     db.refresh(product)
     
-    return product
+    total_profit = (product.sale_price - product.purchase_price) * product.quantity
+    
+    return {
+        "id": product.id,
+        "supplier_id": product.supplier_id,
+        "name": product.name,
+        "purchase_price": product.purchase_price,
+        "sale_price": product.sale_price,
+        "quantity": product.quantity,
+        "total_profit": total_profit
+    }
 
 @router.delete("/{product_id}")
 def delete_product(product_id: int, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):

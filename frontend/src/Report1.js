@@ -40,9 +40,9 @@ const Report1 = () => {
             const data = await response.json();
             setReport(data);
 
-            if(data.low_stock_products && data.low_stock_products.length > 0) {
-                setSelectedProduct(data.low_stock_products[0].name);
-                setQuantity(data.low_stock_products[0].quantity);
+            if(data.summary?.low_stock_products && data.summary.low_stock_products.length > 0) {
+                setSelectedProduct(data.summary.low_stock_products[0].name);
+                setQuantity(data.summary.low_stock_products[0].quantity);
             }
         } catch (error) {
             console.error(error);
@@ -58,8 +58,8 @@ const Report1 = () => {
 
     const prepare_sales_data = () => {
         const data = Array(12).fill(0);
-        if (report && report.monthly_sales_revenue) {
-            report.monthly_sales_revenue.forEach(item => {
+        if (report && report.summary?.monthly_sales_revenue) {
+            report.summary.monthly_sales_revenue.forEach(item => {
                 if (item.month >= 1 && item.month <= 12) {
                     data[item.month - 1] = item.revenue;
                 }
@@ -70,8 +70,8 @@ const Report1 = () => {
 
     const prepare_purchases_data = () => {
         const data = Array(12).fill(0);
-        if (report && report.monthly_purchase_revenue) {
-            report.monthly_purchase_revenue.forEach(item => {
+        if (report && report.summary?.monthly_purchase_orders) {
+            report.summary.monthly_purchase_orders.forEach(item => {
                 if (item.month >= 1 && item.month <= 12) {
                     data[item.month - 1] = item.revenue;
                 }
@@ -84,8 +84,8 @@ const Report1 = () => {
         const selected_name = e.target.value;
         setSelectedProduct(selected_name);
         
-        if (report && report.low_stock_products) {
-            const product = report.low_stock_products.find(prod => prod.name === selected_name);
+        if (report && report.summary?.low_stock_products) {
+            const product = report.summary.low_stock_products.find(prod => prod.name === selected_name);
             if(product) {
                 setQuantity(product.quantity);
             } else {
@@ -293,7 +293,7 @@ const Report1 = () => {
                                     className="w-full appearance-none bg-surface-container-low border border-outline-variant text-on-surface text-sm rounded focus:ring-1 focus:ring-primary focus:border-primary p-2.5 outline-none font-medium cursor-pointer"
                                 >
                                     <option value="" disabled>Select low stock product...</option>
-                                    {report?.low_stock_products?.map((product) => (
+                                    {report?.summary?.low_stock_products?.map((product) => (
                                         <option key={product.id} value={product.name}>{product.name}</option>
                                     ))}
                                 </select>
@@ -320,14 +320,14 @@ const Report1 = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="font-body-sm text-on-surface">
-                                    {report?.top_products?.slice(0, 5).map((prod) => (
+                                    {report?.summary?.top_products?.slice(0, 5).map((prod) => (
                                         <tr key={prod.product_id} className="border-b border-outline-variant hover:bg-surface-container-low/50 transition-colors">
                                             <td className="p-density-high pl-density-medium font-data-mono text-primary">{prod.product_name}</td>
                                             <td className="p-density-high text-right">{prod.quantity_sold}</td>
                                             <td className="p-density-high text-right pr-density-medium font-medium">₹{parseFloat(prod.revenue).toFixed(2)}</td>
                                         </tr>
                                     ))}
-                                    {(!report?.top_products || report.top_products.length === 0) && (
+                                    {(!report?.summary?.top_products || report.summary.top_products.length === 0) && (
                                         <tr>
                                             <td colSpan="3" className="p-density-high text-center text-on-surface-variant py-8">No products found.</td>
                                         </tr>
@@ -352,7 +352,7 @@ const Report1 = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="font-body-sm text-on-surface">
-                                    {report?.recent_sales?.slice(0, 5).map((sale) => (
+                                    {report?.summary?.recent_sales?.slice(0, 5).map((sale) => (
                                         <tr key={sale.id} className="border-b border-outline-variant hover:bg-surface-container-low/50 transition-colors">
                                             <td className="p-density-high pl-density-medium font-data-mono text-primary">#{sale.id}</td>
                                             <td className="p-density-high">
@@ -363,7 +363,7 @@ const Report1 = () => {
                                             <td className="p-density-high text-right pr-density-medium text-on-surface-variant">{new Date(sale.date).toLocaleDateString()}</td>
                                         </tr>
                                     ))}
-                                    {(!report?.recent_sales || report.recent_sales.length === 0) && (
+                                    {(!report?.summary?.recent_sales || report.summary.recent_sales.length === 0) && (
                                         <tr>
                                             <td colSpan="4" className="p-density-high text-center text-on-surface-variant py-8">No recent sales found.</td>
                                         </tr>
