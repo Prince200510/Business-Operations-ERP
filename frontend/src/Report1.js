@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaTruck, FaChartBar, FaShoppingCart, FaBoxOpen, FaUser, FaUserFriends } from 'react-icons/fa';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, Filler} from 'chart.js';
-import { Bar, Line, Pie } from 'react-chartjs-2';
+import { Bar, Line } from 'react-chartjs-2';
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, Filler);
 
 const Report1 = () => {
     const navigate = useNavigate();
     const [report, setReport] = useState(null);
-    const [products, setProducts] = useState([]);
     const [selectedProduct, setSelectedProduct] = useState('');
     const [quantity, setQuantity] = useState(0);
     const [chartType, setChartType] = useState('bar');
@@ -25,7 +23,7 @@ const Report1 = () => {
                 return;
             }
 
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/reports/dashbaord`, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/reports/dashboard`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -41,11 +39,10 @@ const Report1 = () => {
 
             const data = await response.json();
             setReport(data);
-            setProducts(data.products || []);
 
-            if(data.products && data.products.length > 0) {
-                setSelectedProduct(data.products[0].name1);
-                setQuantity(data.products[0].quantity);
+            if(data.low_stock_products && data.low_stock_products.length > 0) {
+                setSelectedProduct(data.low_stock_products[0].name);
+                setQuantity(data.low_stock_products[0].quantity);
             }
         } catch (error) {
             console.error(error);
@@ -59,36 +56,46 @@ const Report1 = () => {
         fetch_dashboard();
     }, []);
 
-    const prepare_chart = () => {
-        if(!report) {
-            return Array(12).fill(0);
+    const prepare_sales_data = () => {
+        const data = Array(12).fill(0);
+        if (report && report.monthly_sales_revenue) {
+            report.monthly_sales_revenue.forEach(item => {
+                if (item.month >= 1 && item.month <= 12) {
+                    data[item.month - 1] = item.revenue;
+                }
+            });
         }
+        return data;
+    };
 
-        return report.monthly_sales.map(item => item.count);
+    const prepare_purchases_data = () => {
+        const data = Array(12).fill(0);
+        if (report && report.monthly_purchase_revenue) {
+            report.monthly_purchase_revenue.forEach(item => {
+                if (item.month >= 1 && item.month <= 12) {
+                    data[item.month - 1] = item.revenue;
+                }
+            });
+        }
+        return data;
     };
 
     const handle_product_change = (e) => {
         const selected_name = e.target.value;
         setSelectedProduct(selected_name);
-        const product = products.find(prod => prod.name1 === selected_name);
-
-        if(product) {
-            setQuantity(product.quantity);
-        } else {
-            setQuantity(0);
+        
+        if (report && report.low_stock_products) {
+            const product = report.low_stock_products.find(prod => prod.name === selected_name);
+            if(product) {
+                setQuantity(product.quantity);
+            } else {
+                setQuantity(0);
+            }
         }
     }
-        
-
     
-    const generateYAxisTicks = () => {
-        const maxYValue = Math.ceil(Math.max(...prepareChartData().map(dataPoint => dataPoint.y)));
-        return Array.from({ length: maxYValue }, (_, index) => index + 1);
-    };
     const handleChangeChartType = (event) => {
-        const selectedChartType = event.target.value;
-        console.log("Selected Chart Type:", selectedChartType); 
-        setChartType(selectedChartType);
+        setChartType(event.target.value);
     };
     
     return (
@@ -97,14 +104,14 @@ const Report1 = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
                     <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-density-medium flex flex-col gap-2 relative overflow-hidden">
                         <div className="flex justify-between items-start">
-                            <span className="font-body-sm text-body-sm text-secondary uppercase tracking-wider">Total Sales</span>
+                            <span className="font-body-sm text-body-sm text-secondary uppercase tracking-wider">Total Revenue</span>
                             <span className="material-symbols-outlined text-outline text-[20px]">payments</span>
                         </div>
-                        <div className="font-h2 text-h2 text-on-surface">{report?.summary.total_sales ?? 0}</div>
+                        <div className="font-h2 text-h2 text-on-surface">₹{report?.summary.total_revenue ?? 0}</div>
                         <div className="flex items-center gap-1 mt-auto pt-2">
                             <span className="material-symbols-outlined text-[16px] text-primary">trending_up</span>
-                            <span className="font-data-mono text-data-mono text-primary">Active</span>
-                            <span className="font-body-sm text-[11px] text-on-surface-variant ml-1">all time records</span>
+                            <span className="font-data-mono text-data-mono text-primary">{report?.summary.total_sales_orders ?? 0}</span>
+                            <span className="font-body-sm text-[11px] text-on-surface-variant ml-1">total sales orders</span>
                         </div>
                         <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-primary/5 rounded-full flex items-center justify-center pointer-events-none">
                             <span className="material-symbols-outlined text-[48px] text-primary/20">payments</span>
@@ -115,10 +122,10 @@ const Report1 = () => {
                             <span className="font-body-sm text-body-sm text-secondary uppercase tracking-wider">New Customers</span>
                             <span className="material-symbols-outlined text-outline text-[20px]">group_add</span>
                         </div>
-                        <div className="font-h2 text-h2 text-on-surface">{report?.summary.sales_this_month ?? 0}</div>
+                        <div className="font-h2 text-h2 text-on-surface">{report?.summary.new_customers_this_month ?? 0}</div>
                         <div className="flex items-center gap-1 mt-auto pt-2">
                             <span className="material-symbols-outlined text-[16px] text-primary">trending_up</span>
-                            <span className="font-data-mono text-data-mono text-primary">Monthly</span>
+                            <span className="font-data-mono text-data-mono text-primary">{report?.summary.sales_this_month ?? 0}</span>
                             <span className="font-body-sm text-[11px] text-on-surface-variant ml-1">orders this month</span>
                         </div>
                         <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-secondary/5 rounded-full flex items-center justify-center pointer-events-none">
@@ -130,11 +137,11 @@ const Report1 = () => {
                             <span className="font-body-sm text-body-sm text-secondary uppercase tracking-wider">Total Purchases</span>
                             <span className="material-symbols-outlined text-outline text-[20px]">shopping_cart</span>
                         </div>
-                        <div className="font-h2 text-h2 text-on-surface">{report?.summary.total_purchases ?? 0}</div>
+                        <div className="font-h2 text-h2 text-on-surface">{report?.summary.total_purchase_orders ?? 0}</div>
                         <div className="flex items-center gap-1 mt-auto pt-2">
                             <span className="material-symbols-outlined text-[16px] text-error">trending_down</span>
-                            <span className="font-data-mono text-data-mono text-error">Volume</span>
-                            <span className="font-body-sm text-[11px] text-on-surface-variant ml-1">total recorded</span>
+                            <span className="font-data-mono text-data-mono text-error">Inventory Val</span>
+                            <span className="font-body-sm text-[11px] text-on-surface-variant ml-1">₹{report?.summary.inventory_value ?? 0}</span>
                         </div>
                         <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-tertiary/5 rounded-full flex items-center justify-center pointer-events-none">
                             <span className="material-symbols-outlined text-[48px] text-tertiary/20">shopping_cart</span>
@@ -150,14 +157,15 @@ const Report1 = () => {
                             <div className="flex-1 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
                                 <div className="h-full bg-primary rounded-full" style={{ width: '100%' }}></div>
                             </div>
-                            <span className="font-data-mono text-[11px] text-on-surface-variant">Active</span>
+                            <span className="font-data-mono text-[11px] text-on-surface-variant">{report?.summary.total_inventory_units ?? 0} units</span>
                         </div>
                     </div>
                 </div>
+                
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
                     <div className="lg:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-lg flex flex-col">
                         <div className="p-density-medium border-b border-outline-variant flex justify-between items-center">
-                            <h3 className="font-h3 text-[16px] text-on-surface">Monthly Purchase Trend</h3>
+                            <h3 className="font-h3 text-[16px] text-on-surface">Monthly Revenue Trend</h3>
                             <div className="flex gap-2">
                                 <select 
                                     value={chartType} 
@@ -176,16 +184,21 @@ const Report1 = () => {
                                     data={{
                                         labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                                         datasets: [{
-                                            label: 'Sales',
-                                            data: prepare_chart(),
+                                            label: 'Sales Revenue',
+                                            data: prepare_sales_data(),
                                             backgroundColor: '#1d4ed8',
+                                            borderRadius: 4,
+                                        }, {
+                                            label: 'Purchase Cost',
+                                            data: prepare_purchases_data(),
+                                            backgroundColor: '#ef4444',
                                             borderRadius: 4,
                                         }]
                                     }} 
                                     options={{
                                         responsive: true,
                                         maintainAspectRatio: false,
-                                        plugins: { legend: { display: false } },
+                                        plugins: { legend: { position: 'top' } },
                                         scales: {
                                             y: { beginAtZero: true, grid: { color: '#e0e3e5' } },
                                             x: { grid: { display: false } }
@@ -198,20 +211,23 @@ const Report1 = () => {
                                     data={{
                                         labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                                         datasets: [{
-                                            label: 'Purchases',
-                                            data: prepareChartData().map(d => d.y),
+                                            label: 'Sales Revenue',
+                                            data: prepare_sales_data(),
                                             borderColor: '#1d4ed8',
                                             tension: 0.4,
                                             borderWidth: 3,
-                                            pointBackgroundColor: '#ffffff',
-                                            pointBorderColor: '#1d4ed8',
-                                            pointBorderWidth: 2,
+                                        }, {
+                                            label: 'Purchase Cost',
+                                            data: prepare_purchases_data(),
+                                            borderColor: '#ef4444',
+                                            tension: 0.4,
+                                            borderWidth: 3,
                                         }]
                                     }} 
                                     options={{
                                         responsive: true,
                                         maintainAspectRatio: false,
-                                        plugins: { legend: { display: false } },
+                                        plugins: { legend: { position: 'top' } },
                                         scales: {
                                             y: { beginAtZero: true, grid: { color: '#e0e3e5' } },
                                             x: { grid: { display: false } }
@@ -224,10 +240,18 @@ const Report1 = () => {
                                     data={{
                                         labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                                         datasets: [{
-                                            label: 'Purchases',
-                                            data: prepareChartData().map(d => d.y),
+                                            label: 'Sales Revenue',
+                                            data: prepare_sales_data(),
                                             borderColor: '#1d4ed8',
                                             backgroundColor: 'rgba(29, 78, 216, 0.15)',
+                                            fill: true,
+                                            tension: 0.4,
+                                            borderWidth: 2,
+                                        }, {
+                                            label: 'Purchase Cost',
+                                            data: prepare_purchases_data(),
+                                            borderColor: '#ef4444',
+                                            backgroundColor: 'rgba(239, 68, 68, 0.15)',
                                             fill: true,
                                             tension: 0.4,
                                             borderWidth: 2,
@@ -236,7 +260,7 @@ const Report1 = () => {
                                     options={{
                                         responsive: true,
                                         maintainAspectRatio: false,
-                                        plugins: { legend: { display: false } },
+                                        plugins: { legend: { position: 'top' } },
                                         scales: {
                                             y: { beginAtZero: true, grid: { color: '#e0e3e5' } },
                                             x: { grid: { display: false } }
@@ -247,17 +271,14 @@ const Report1 = () => {
                         </div>
                     </div>
 
-                    {/* Quick Inventory Check */}
                     <div className="lg:col-span-4 bg-surface-container-lowest border border-outline-variant rounded-lg flex flex-col">
                         <div className="p-density-medium border-b border-outline-variant flex justify-between items-center">
-                            <h3 className="font-h3 text-[16px] text-on-surface">Quick Inventory Check</h3>
-                            <button className="p-1 hover:bg-surface-container rounded text-on-surface-variant transition-colors"><span className="material-symbols-outlined text-[18px]">more_horiz</span></button>
+                            <h3 className="font-h3 text-[16px] text-on-surface">Low Stock Check</h3>
                         </div>
                         <div className="p-density-medium flex-1 flex flex-col items-center justify-center gap-6 min-h-[300px]">
-                            
                             <div className="relative w-48 h-48 flex items-center justify-center">
                                 <svg className="w-full h-full transform -rotate-90 absolute" viewBox="0 0 100 100">
-                                    <circle cx="50" cy="50" fill="transparent" r="40" stroke="#1d4ed8" strokeDasharray="251.2" strokeDashoffset="60" strokeWidth="16"></circle>
+                                    <circle cx="50" cy="50" fill="transparent" r="40" stroke="#ef4444" strokeDasharray="251.2" strokeDashoffset="60" strokeWidth="16"></circle>
                                     <circle className="transform origin-center rotate-[270deg]" cx="50" cy="50" fill="transparent" r="40" stroke="#e0e3e5" strokeDasharray="251.2" strokeDashoffset="190" strokeWidth="16"></circle>
                                 </svg>
                                 <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -265,16 +286,15 @@ const Report1 = () => {
                                     <span className="font-label-caps text-[9px] text-on-surface-variant">IN STOCK</span>
                                 </div>
                             </div>
-
                             <div className="w-full flex flex-col gap-2 px-4 relative">
                                 <select 
                                     value={selectedProduct} 
                                     onChange={handle_product_change}
                                     className="w-full appearance-none bg-surface-container-low border border-outline-variant text-on-surface text-sm rounded focus:ring-1 focus:ring-primary focus:border-primary p-2.5 outline-none font-medium cursor-pointer"
                                 >
-                                    <option value="" disabled>Select product to query...</option>
-                                    {products.map((product) => (
-                                        <option key={product.id} value={product.name1}>{product.name1}</option>
+                                    <option value="" disabled>Select low stock product...</option>
+                                    {report?.low_stock_products?.map((product) => (
+                                        <option key={product.id} value={product.name}>{product.name}</option>
                                     ))}
                                 </select>
                                 <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center px-2 text-on-surface-variant">
@@ -285,37 +305,67 @@ const Report1 = () => {
                     </div>
                 </div>
 
-                {/* Row 3: Data Table */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter mb-6">
-                    <div className="lg:col-span-12 bg-surface-container-lowest border border-outline-variant rounded-lg flex flex-col overflow-hidden">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-gutter mb-6">
+                    <div className="bg-surface-container-lowest border border-outline-variant rounded-lg flex flex-col overflow-hidden">
                         <div className="p-density-medium border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
-                            <h3 className="font-h3 text-[16px] text-on-surface">Product Directory Preview</h3>
-                            <button className="text-primary text-body-sm font-medium hover:underline">View All</button>
+                            <h3 className="font-h3 text-[16px] text-on-surface">Top Selling Products</h3>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead className="bg-surface-container-low font-label-caps text-on-surface-variant border-b border-outline-variant">
                                     <tr>
                                         <th className="p-density-high font-medium pl-density-medium">Product Name</th>
-                                        <th className="p-density-high font-medium">Supplier Reference</th>
-                                        <th className="p-density-high font-medium">Sale Price</th>
-                                        <th className="p-density-high font-medium text-right pr-density-medium">Stock Status</th>
+                                        <th className="p-density-high font-medium text-right">Qty Sold</th>
+                                        <th className="p-density-high font-medium text-right pr-density-medium">Revenue generated</th>
                                     </tr>
                                 </thead>
                                 <tbody className="font-body-sm text-on-surface">
-                                    {products.slice(0, 5).map((prod) => (
-                                        <tr key={prod.id} className="border-b border-outline-variant hover:bg-surface-container-low/50 transition-colors">
-                                            <td className="p-density-high pl-density-medium font-data-mono text-primary">{prod.name1}</td>
-                                            <td className="p-density-high">{prod.supplier_id || 'N/A'}</td>
-                                            <td className="p-density-high text-on-surface-variant">₹{parseFloat(prod.sale_price || 0).toFixed(2)}</td>
-                                            <td className="p-density-high text-right pr-density-medium">
-                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${prod.quantity > 50 ? 'bg-secondary-container text-on-secondary-container' : prod.quantity > 10 ? 'bg-error-container text-on-error-container' : 'bg-error text-on-error'}`}>{prod.quantity}{' '}Units</span>
-                                            </td>
+                                    {report?.top_products?.slice(0, 5).map((prod) => (
+                                        <tr key={prod.product_id} className="border-b border-outline-variant hover:bg-surface-container-low/50 transition-colors">
+                                            <td className="p-density-high pl-density-medium font-data-mono text-primary">{prod.product_name}</td>
+                                            <td className="p-density-high text-right">{prod.quantity_sold}</td>
+                                            <td className="p-density-high text-right pr-density-medium font-medium">₹{parseFloat(prod.revenue).toFixed(2)}</td>
                                         </tr>
                                     ))}
-                                    {products.length === 0 && (
+                                    {(!report?.top_products || report.top_products.length === 0) && (
                                         <tr>
-                                            <td colSpan="4" className="p-density-high text-center text-on-surface-variant py-8">No products found.</td>
+                                            <td colSpan="3" className="p-density-high text-center text-on-surface-variant py-8">No products found.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div className="bg-surface-container-lowest border border-outline-variant rounded-lg flex flex-col overflow-hidden">
+                        <div className="p-density-medium border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
+                            <h3 className="font-h3 text-[16px] text-on-surface">Recent Sales</h3>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead className="bg-surface-container-low font-label-caps text-on-surface-variant border-b border-outline-variant">
+                                    <tr>
+                                        <th className="p-density-high font-medium pl-density-medium">Order ID</th>
+                                        <th className="p-density-high font-medium">Customer</th>
+                                        <th className="p-density-high font-medium text-right">Amount</th>
+                                        <th className="p-density-high font-medium text-right pr-density-medium">Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="font-body-sm text-on-surface">
+                                    {report?.recent_sales?.slice(0, 5).map((sale) => (
+                                        <tr key={sale.id} className="border-b border-outline-variant hover:bg-surface-container-low/50 transition-colors">
+                                            <td className="p-density-high pl-density-medium font-data-mono text-primary">#{sale.id}</td>
+                                            <td className="p-density-high">
+                                                <div>{sale.customer_name}</div>
+                                                <div className="text-[10px] text-on-surface-variant">{sale.payment_method}</div>
+                                            </td>
+                                            <td className="p-density-high text-right font-medium">₹{parseFloat(sale.final_total).toFixed(2)}</td>
+                                            <td className="p-density-high text-right pr-density-medium text-on-surface-variant">{new Date(sale.date).toLocaleDateString()}</td>
+                                        </tr>
+                                    ))}
+                                    {(!report?.recent_sales || report.recent_sales.length === 0) && (
+                                        <tr>
+                                            <td colSpan="4" className="p-density-high text-center text-on-surface-variant py-8">No recent sales found.</td>
                                         </tr>
                                     )}
                                 </tbody>
