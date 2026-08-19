@@ -19,7 +19,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://erp.vercel.app"
+        "https://business-op-erp.vercel.app"
     ],  
     allow_credentials=True,
     allow_methods=["*"],
