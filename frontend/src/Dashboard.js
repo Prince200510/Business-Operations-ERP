@@ -15,12 +15,9 @@ import Bussiness from './Bussiness.js';
 const Dashboard = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    
-    // Get username from location state OR from localStorage if navigated automatically
     const loggedInUserStr = localStorage.getItem('loggedInUser');
     const storedUser = loggedInUserStr ? JSON.parse(loggedInUserStr) : null;
     const username = location?.state?.userName || (storedUser && storedUser.username);
-
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isDropdownOpen1, setIsDropdownOpen1] = useState(false);
 
@@ -68,13 +65,11 @@ const Dashboard = () => {
 
     return (
         <div className="bg-background text-on-background font-body-md h-screen w-full overflow-hidden flex flex-col">
-            {/* TopNavBar */}
             <header className="bg-surface-container-lowest border-b border-outline-variant flex justify-between items-center w-full px-container-margin h-16 sticky top-0 z-50 shrink-0">
                 <div className="flex items-center gap-gutter">
                     <div className="font-h1 text-h1 font-bold text-primary">Business ERP</div>
                 </div>
                 <div className="flex items-center gap-gutter">
-                    {/* Search Bar */}
                     <div className="relative hidden md:block w-64">
                         <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
                         <input className="w-full h-8 pl-9 pr-3 bg-surface-container-low border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary font-body-sm text-on-surface placeholder:text-on-surface-variant transition-all outline-none" placeholder="Search operations..." type="text"/>
@@ -101,9 +96,7 @@ const Dashboard = () => {
             </header>
 
             <div className="flex flex-1 overflow-hidden relative">
-                {/* SideNavBar */}
                 <aside className="bg-surface border-r border-outline-variant fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 flex flex-col z-40 transition-all duration-200 ease-in-out hidden md:flex shrink-0">
-                    {/* Header section */}
                     <div className="p-container-margin border-b border-outline-variant flex items-center gap-3">
                         <div className="w-10 h-10 rounded bg-primary-container text-on-primary flex items-center justify-center font-bold text-lg">
                             {(username || 'B')[0].toUpperCase()}
@@ -112,9 +105,7 @@ const Dashboard = () => {
                             <span className="font-h3 text-[14px] leading-tight text-on-surface font-semibold capitalize">{username || 'Business'} Workspace</span>
                             <span className="font-label-caps text-[11px] text-on-surface-variant">Enterprise Admin</span>
                         </div>
-                    </div>
-                    
-                    {/* Navigation Links */}
+                    </div>                    
                     <nav className="flex-1 overflow-y-auto py-4 flex flex-col gap-1 px-3">
                         <div className={getNavItemClass('dashboard')} onClick={() => handleNavigation('dashboard', <Report1 />)}>
                             <span className={getIconClass('dashboard')}>dashboard</span>
@@ -154,8 +145,6 @@ const Dashboard = () => {
                         </div>
                     </nav>
                 </aside>
-
-                {/* Main Content */}
                 <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background md:ml-64 w-full h-full">
                     <div className="w-full h-full">
                         {currentComponent}

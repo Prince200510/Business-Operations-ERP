@@ -1,221 +1,85 @@
 import React, { useState, useEffect } from 'react';
-import database from './firebase';
-import { ref, onValue, get, child } from 'firebase/database';
-import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { FaTruck, FaChartBar, FaShoppingCart, FaBoxOpen, FaUser, FaUserFriends } from 'react-icons/fa';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, Filler} from 'chart.js';
 import { Bar, Line, Pie } from 'react-chartjs-2';
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, Filler);
 
 const Report1 = () => {
+    const navigate = useNavigate();
+    const [report, setReport] = useState(null);
     const [products, setProducts] = useState([]);
     const [selectedProduct, setSelectedProduct] = useState('');
     const [quantity, setQuantity] = useState(0);
-    const [purchaseOrderCount, setPurchaseOrderCount] = useState(0);
-    const [supplierCount, setSupplierCount] = useState(0);
-    const [historycount, sethistorycount] = useState(0);
-    const [purchaseHistory, setPurchaseHistory] = useState({});
     const [chartType, setChartType] = useState('bar');
-    const [sale, setSale] = useState(0);
-    const [sale1, setSale1] = useState(0);
-    const [customerName, SetCustomerName] = useState('');
-    const location = useLocation();
-    const { userName } = location.state; 
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    const fetch_dashboard = async () => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem('access_token');
+
+            if(!token) {
+                navigate('/');
+                return;
+            }
+
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/reports/dashbaord`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if(response.status === 401) {
+                localStorage.removeItem('access_token');
+                navigate('/');
+                return;
+            }
+
+            const data = await response.json();
+            setReport(data);
+            setProducts(data.products || []);
+
+            if(data.products && data.products.length > 0) {
+                setSelectedProduct(data.products[0].name1);
+                setQuantity(data.products[0].quantity);
+            }
+        } catch (error) {
+            console.error(error);
+            setError(error.message);
+        } finally {
+            setLoading(false);
+        }
+    }
 
     useEffect(() => {
-        const productsRef = ref(database, `${userName}Products`);
-        onValue(productsRef, (snapshot) => {
-            if (snapshot.exists()) {
-                const data = snapshot.val();
-                const productsArray = Object.values(data);
-                setProducts(productsArray);
-
-                if (productsArray.length > 0) {
-                    setSelectedProduct(productsArray[0].name1);
-                    setQuantity(productsArray[0].quantity);
-                }
-            } else {
-                setProducts([]);
-            }
-        });
-
-        const suppliersRef = ref(database, `${userName}suppliers`);
-        onValue(suppliersRef, (snapshot) => {
-        console.log("Suppliers Snapshot:", snapshot.val()); 
-        if (snapshot.exists()) {
-            let count = 0;
-            snapshot.forEach(() => {
-                count++;
-            });
-            setSupplierCount(count);
-        } else {
-            setSupplierCount(0);
-        }
-        });
-
-        const saleRef = ref(database, `${userName}Customers`);
-        onValue(saleRef, (snapshot) => {
-        console.log("Sales Snapshot:", snapshot.val()); 
-        if (snapshot.exists()) {
-            let count = 0;
-            snapshot.forEach(() => {
-                count++;
-            });
-            setSale(count);
-        } else {
-            setSale(0);
-        }
-        });
-
-        const currentDate = new Date();
-const currentMonth1 = currentDate.getMonth() + 1; 
-
-onValue(saleRef, (snapshot) => {
-    if (snapshot.exists()) {
-        const data = snapshot.val();
-        let currentMonthCount = 0; 
-        Object.values(data).forEach(order => {
-            const dateTime = order.date; 
-            if (dateTime) { 
-                const [datePart, timePart] = dateTime.split(", "); 
-                const [dateStr, timeStr] = datePart.split("/");
-                const month = parseInt(dateStr); 
-                const year = parseInt(timeStr);
-                if (month === currentMonth1) {
-                    currentMonthCount++;
-                }
-            }
-        });
-        
-        console.log("Count of orders for the current month:", currentMonthCount);
-        setSale1(currentMonthCount);
-    } else {
-        console.log("No data available.");
-        setSale1(0);
-    }
-});
-
-        
-        
-
-    const currentMonth = new Date().getMonth() + 1;
-    const currentYear = new Date().getFullYear();
-
-    const purchaseOrdersRef = ref(database, `${userName}purchase`);
-    onValue(purchaseOrdersRef, (snapshot) => {
-        if (snapshot.exists()) {
-            let count = 0;
-            snapshot.forEach((childSnapshot) => {
-                const dateTime = childSnapshot.val().dateTime;
-                const [datePart, timePart] = dateTime.split(", "); 
-                const [dateStr, timeStr] = datePart.split("/");
-                const month = parseInt(dateStr); 
-                if (month === currentMonth) {
-                    count++;
-                }
-            });
-            setPurchaseOrderCount(count);
-        } else {
-            setPurchaseOrderCount(0);
-        }
-
-    });
-    
-    
-
-    onValue(purchaseOrdersRef, (snapshot) => {
-        if (snapshot.exists()) {
-            let counts = 0;
-            snapshot.forEach(() => {
-                counts++;
-            });
-            sethistorycount(counts);
-        } else {
-            sethistorycount(0);
-        }
-    });
-
-    onValue(purchaseOrdersRef, (snapshot) => {
-        if (snapshot.exists()) {
-            const data = snapshot.val();
-            const history = {};
-            Object.values(data).forEach(order => {
-                const dateTime = order.dateTime;
-                const [datePart, timePart] = dateTime.split(", "); 
-                const [dateStr, timeStr] = datePart.split("/");
-                const month = parseInt(dateStr); 
-                const year = parseInt(timeStr);
-
-                if (!history[year]) {
-                    history[year] = {};
-                }
-
-                if (!history[year][month]) {
-                    history[year][month] = 0;
-                }
-
-                history[year][month]++;
-            });
-
-            setPurchaseHistory(history);
-        } else {
-            setPurchaseHistory({});
-        }
-    });
-
-    onValue(saleRef, (snapshot) => {
-        if (snapshot.exists()) {
-            const data = snapshot.val();
-            const uniqueCustomers = new Set(); 
-            Object.values(data).forEach(order => {
-                const dateTime = order.date; 
-                const customerName = order.customerName; 
-                if (dateTime && customerName) { 
-                    const [datePart, timePart] = dateTime.split(", "); 
-                    const [dateStr, timeStr] = datePart.split("/");
-                    const month = parseInt(dateStr); 
-                    const year = parseInt(timeStr);
-                    if (month === currentMonth) {
-                        uniqueCustomers.add(customerName); 
-                    }
-                }
-            });
-            
-            console.log("Count of unique customer names for the current month:", uniqueCustomers.size);
-            SetCustomerName(uniqueCustomers.size);
-        } else {
-            console.log("No data available.");
-            SetCustomerName('');
-        }
-    });
-
+        fetch_dashboard();
     }, []);
 
-    const prepareChartData = () => {
-        const data = [];
-        const monthlyCounts = Array.from({ length: 12 }, () => 0);
-        for (const year in purchaseHistory) {
-            const yearData = purchaseHistory[year];
-            for (let month = 1; month <= 12; month++) {
-                const count = yearData[month] || 0;
-                monthlyCounts[month - 1] += count; 
-            }
+    const prepare_chart = () => {
+        if(!report) {
+            return Array(12).fill(0);
         }
-        for (let month = 1; month <= 12; month++) {
-            data.push({ x: `${month}`, y: monthlyCounts[month - 1] });
-        }
-        return data;
+
+        return report.monthly_sales.map(item => item.count);
     };
-    const handleProductChange = (e) => {
-        const selectedProductName = e.target.value;
-        setSelectedProduct(selectedProductName);
-        const selectedProduct = products.find(product => product.name1 === selectedProductName);
-        if (selectedProduct) {
-            setQuantity(selectedProduct.quantity);
+
+    const handle_product_change = (e) => {
+        const selected_name = e.target.value;
+        setSelectedProduct(selected_name);
+        const product = products.find(prod => prod.name1 === selected_name);
+
+        if(product) {
+            setQuantity(product.quantity);
         } else {
             setQuantity(0);
         }
-    };
+    }
+        
+
     
     const generateYAxisTicks = () => {
         const maxYValue = Math.ceil(Math.max(...prepareChartData().map(dataPoint => dataPoint.y)));
@@ -230,15 +94,13 @@ onValue(saleRef, (snapshot) => {
     return (
         <div className="flex-1 overflow-y-auto p-container-margin w-full bg-background font-body-md text-on-background">
             <div className="flex flex-col gap-gutter max-w-[1600px] mx-auto">
-                {/* Row 1: Key Metrics */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
-                    {/* Metric 1 */}
                     <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-density-medium flex flex-col gap-2 relative overflow-hidden">
                         <div className="flex justify-between items-start">
                             <span className="font-body-sm text-body-sm text-secondary uppercase tracking-wider">Total Sales</span>
                             <span className="material-symbols-outlined text-outline text-[20px]">payments</span>
                         </div>
-                        <div className="font-h2 text-h2 text-on-surface">{sale}</div>
+                        <div className="font-h2 text-h2 text-on-surface">{report?.summary.total_sales ?? 0}</div>
                         <div className="flex items-center gap-1 mt-auto pt-2">
                             <span className="material-symbols-outlined text-[16px] text-primary">trending_up</span>
                             <span className="font-data-mono text-data-mono text-primary">Active</span>
@@ -248,13 +110,12 @@ onValue(saleRef, (snapshot) => {
                             <span className="material-symbols-outlined text-[48px] text-primary/20">payments</span>
                         </div>
                     </div>
-                    {/* Metric 2 */}
                     <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-density-medium flex flex-col gap-2 relative overflow-hidden">
                         <div className="flex justify-between items-start">
                             <span className="font-body-sm text-body-sm text-secondary uppercase tracking-wider">New Customers</span>
                             <span className="material-symbols-outlined text-outline text-[20px]">group_add</span>
                         </div>
-                        <div className="font-h2 text-h2 text-on-surface">{sale1}</div>
+                        <div className="font-h2 text-h2 text-on-surface">{report?.summary.sales_this_month ?? 0}</div>
                         <div className="flex items-center gap-1 mt-auto pt-2">
                             <span className="material-symbols-outlined text-[16px] text-primary">trending_up</span>
                             <span className="font-data-mono text-data-mono text-primary">Monthly</span>
@@ -264,13 +125,12 @@ onValue(saleRef, (snapshot) => {
                             <span className="material-symbols-outlined text-[48px] text-secondary/20">group_add</span>
                         </div>
                     </div>
-                    {/* Metric 3 */}
                     <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-density-medium flex flex-col gap-2 relative overflow-hidden">
                         <div className="flex justify-between items-start">
                             <span className="font-body-sm text-body-sm text-secondary uppercase tracking-wider">Total Purchases</span>
                             <span className="material-symbols-outlined text-outline text-[20px]">shopping_cart</span>
                         </div>
-                        <div className="font-h2 text-h2 text-on-surface">{historycount}</div>
+                        <div className="font-h2 text-h2 text-on-surface">{report?.summary.total_purchases ?? 0}</div>
                         <div className="flex items-center gap-1 mt-auto pt-2">
                             <span className="material-symbols-outlined text-[16px] text-error">trending_down</span>
                             <span className="font-data-mono text-data-mono text-error">Volume</span>
@@ -280,13 +140,12 @@ onValue(saleRef, (snapshot) => {
                             <span className="material-symbols-outlined text-[48px] text-tertiary/20">shopping_cart</span>
                         </div>
                     </div>
-                    {/* Metric 4 */}
                     <div className="bg-surface-container-lowest border border-outline-variant rounded-lg p-density-medium flex flex-col gap-2 relative overflow-hidden">
                         <div className="flex justify-between items-start">
                             <span className="font-body-sm text-body-sm text-secondary uppercase tracking-wider">Active Suppliers</span>
                             <span className="material-symbols-outlined text-outline text-[20px]">inventory_2</span>
                         </div>
-                        <div className="font-h2 text-h2 text-on-surface">{supplierCount}</div>
+                        <div className="font-h2 text-h2 text-on-surface">{report?.summary.active_suppliers ?? 0}</div>
                         <div className="flex items-center gap-2 mt-auto pt-2 w-full">
                             <div className="flex-1 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
                                 <div className="h-full bg-primary rounded-full" style={{ width: '100%' }}></div>
@@ -295,10 +154,7 @@ onValue(saleRef, (snapshot) => {
                         </div>
                     </div>
                 </div>
-
-                {/* Row 2: Charts */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
-                    {/* Line Chart: Monthly Sales Trend */}
                     <div className="lg:col-span-8 bg-surface-container-lowest border border-outline-variant rounded-lg flex flex-col">
                         <div className="p-density-medium border-b border-outline-variant flex justify-between items-center">
                             <h3 className="font-h3 text-[16px] text-on-surface">Monthly Purchase Trend</h3>
@@ -320,8 +176,8 @@ onValue(saleRef, (snapshot) => {
                                     data={{
                                         labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                                         datasets: [{
-                                            label: 'Purchases',
-                                            data: prepareChartData().map(d => d.y),
+                                            label: 'Sales',
+                                            data: prepare_chart(),
                                             backgroundColor: '#1d4ed8',
                                             borderRadius: 4,
                                         }]
@@ -413,12 +269,12 @@ onValue(saleRef, (snapshot) => {
                             <div className="w-full flex flex-col gap-2 px-4 relative">
                                 <select 
                                     value={selectedProduct} 
-                                    onChange={handleProductChange}
+                                    onChange={handle_product_change}
                                     className="w-full appearance-none bg-surface-container-low border border-outline-variant text-on-surface text-sm rounded focus:ring-1 focus:ring-primary focus:border-primary p-2.5 outline-none font-medium cursor-pointer"
                                 >
                                     <option value="" disabled>Select product to query...</option>
-                                    {products.map((product, index) => (
-                                        <option key={index} value={product.name1}>{product.name1}</option>
+                                    {products.map((product) => (
+                                        <option key={product.id} value={product.name1}>{product.name1}</option>
                                     ))}
                                 </select>
                                 <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center px-2 text-on-surface-variant">
@@ -447,23 +303,19 @@ onValue(saleRef, (snapshot) => {
                                     </tr>
                                 </thead>
                                 <tbody className="font-body-sm text-on-surface">
-                                    {products.slice(0, 5).map((prod, idx) => (
-                                        <tr key={idx} className="border-b border-outline-variant hover:bg-surface-container-low/50 transition-colors">
+                                    {products.slice(0, 5).map((prod) => (
+                                        <tr key={prod.id} className="border-b border-outline-variant hover:bg-surface-container-low/50 transition-colors">
                                             <td className="p-density-high pl-density-medium font-data-mono text-primary">{prod.name1}</td>
                                             <td className="p-density-high">{prod.supplier_id || 'N/A'}</td>
                                             <td className="p-density-high text-on-surface-variant">₹{parseFloat(prod.sale_price || 0).toFixed(2)}</td>
                                             <td className="p-density-high text-right pr-density-medium">
-                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${prod.quantity > 50 ? 'bg-secondary-container text-on-secondary-container' : prod.quantity > 10 ? 'bg-error-container text-on-error-container' : 'bg-error text-on-error'}`}>
-                                                    {prod.quantity} Units
-                                                </span>
+                                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${prod.quantity > 50 ? 'bg-secondary-container text-on-secondary-container' : prod.quantity > 10 ? 'bg-error-container text-on-error-container' : 'bg-error text-on-error'}`}>{prod.quantity}{' '}Units</span>
                                             </td>
                                         </tr>
                                     ))}
                                     {products.length === 0 && (
                                         <tr>
-                                            <td colSpan="4" className="p-density-high text-center text-on-surface-variant py-8">
-                                                No products found.
-                                            </td>
+                                            <td colSpan="4" className="p-density-high text-center text-on-surface-variant py-8">No products found.</td>
                                         </tr>
                                     )}
                                 </tbody>
