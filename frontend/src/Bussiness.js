@@ -1,26 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { AiOutlineEnvironment, AiOutlineLink, AiOutlinePhone } from 'react-icons/ai';
 import EditBusiness from './EditBusiness.js';
-import database from './firebase';
-import { ref, onValue } from 'firebase/database';
-import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const Business = () => {
     const [currentComponent, setCurrentComponent] = useState();
     const [businessInfo, setBusinessInfo] = useState(null);
     const [showContent, setShowContent] = useState(true);
-    const location = useLocation();
-    const { userName } = location.state;
+    const navigate = useNavigate();
+
+    const fetch_business_info = async () => {
+        try {
+            const token = localStorage.getItem('access_token');
+
+            if(!token) {
+                navigate('/');
+                return;
+            }
+
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/business/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if(response.ok) {
+                const data = await response.json();
+                setBusinessInfo(data);
+            }
+        } catch(error) {
+            console.error(error);
+        }
+    }
 
     useEffect(() => {
-        const businessRef = ref(database, `${userName}BusinessInfo`);
-        onValue(businessRef, (snapshot) => {
-            if (snapshot.exists()) {
-                setBusinessInfo(snapshot.val());
-            } else {
-                setBusinessInfo(null);
-            }
-        });
+        fetch_business_info();
     }, []);
 
     const handleEditBusinessClick = () => {
@@ -57,8 +69,8 @@ const Business = () => {
                                             <AiOutlinePhone className="text-xl" />
                                         </div>
                                         <div>
-                                            <p className="font-medium text-on-surface">{businessInfo?.phoneNumber1 || '-'}</p>
-                                            <p className="text-sm text-on-surface-variant mt-1">{businessInfo?.phoneNumber2 || '-'}</p>
+                                            <p className="font-medium text-on-surface">{businessInfo?.phone_no1 || '-'}</p>
+                                            <p className="text-sm text-on-surface-variant mt-1">{businessInfo?.phone_no2 || '-'}</p>
                                         </div>
                                     </div>
                                     
@@ -67,8 +79,8 @@ const Business = () => {
                                             <AiOutlineLink className="text-xl" />
                                         </div>
                                         <div>
-                                            <p className="font-medium text-on-surface">{businessInfo?.websiteName1 || '-'}</p>
-                                            <p className="text-sm text-on-surface-variant mt-1">{businessInfo?.websiteName2 || '-'}</p>
+                                            <p className="font-medium text-on-surface">{businessInfo?.website_link || '-'}</p>
+                                            <p className="text-sm text-on-surface-variant mt-1">{businessInfo?.email_id || '-'}</p>
                                         </div>
                                     </div>
 
@@ -85,9 +97,9 @@ const Business = () => {
 
                             <div className="bg-surface-container-lowest border border-outline-variant rounded-lg flex flex-col overflow-hidden items-center justify-center p-8 text-center">
                                 <div className="w-24 h-24 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-4xl mb-4 shadow-sm border border-outline-variant overflow-hidden">
-                                    {businessInfo?.businessName ? businessInfo.businessName[0].toUpperCase() : 'B'}
+                                    {businessInfo?.business_name ? businessInfo.business_name[0].toUpperCase() : 'B'}
                                 </div>
-                                <h3 className="font-h2 text-h2 text-on-surface mb-2">{businessInfo?.businessName || 'No business information'}</h3>
+                                <h3 className="font-h2 text-h2 text-on-surface mb-2">{businessInfo?.business_name || 'No business information'}</h3>
                                 <p className="text-on-surface-variant font-body-md">{businessInfo?.name || '-'}</p>
                             </div>
                         </div>

@@ -6,34 +6,40 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 const EditBusiness = () => {
     const navigate = useNavigate();
-    const location = useLocation();
-    const { userName } = location.state;
     const [businessInfo, setBusinessInfo] = useState({
         name: '',
-        businessName: '',
-        phoneNumber1: '',
-        phoneNumber2: '',
-        websiteName1: '',
-        websiteName2: '',
+        business_name: '',
+        phone_no1: '',
+        phone_no2: '',
+        email_id: '',
+        website_link: '',
         address: ''
     });
 
-    useEffect(() => {
-        const fetchBusinessInfo = async () => {
-            try {
-                const businessRef = ref(database, `${userName}BusinessInfo`);
-                const snapshot = await get(businessRef);
-                if (snapshot.exists()) {
-                    setBusinessInfo(snapshot.val());
-                } else {
-                    console.log("No business information available.");
-                }
-            } catch (error) {
-                console.error('Error fetching business information:', error);
-            }
-        };
+    const fetch_business_info = async () => {
+        try {
+            const token = localStorage.getItem('access_token');
 
-        fetchBusinessInfo();
+            if(!token) {
+                navigate('/');
+                return;
+            }
+
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/business/`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if(response.ok) {
+                const data = await response.json();
+                setBusinessInfo(data);
+            }
+        } catch(error) {
+            console.error(error);
+        }
+    }
+
+    useEffect(() => {
+       fetch_business_info();
     }, []);
 
     const handleChange = (e) => {
@@ -44,9 +50,39 @@ const EditBusiness = () => {
         }));
     };
 
-    const handleUpdate = () => {
-        set(ref(database, `${userName}BusinessInfo`), businessInfo)
-            .then(() => {
+    const handleUpdate = async () => {
+        const token = localStorage.getItem('access_token');
+
+        if(!token) {
+            navigate('/');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/business/`, {
+                method: "POST",
+                headers: { 
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}` 
+                },
+                body: JSON.stringify({
+                    name: businessInfo.name,
+                    business_name: businessInfo.business_name,
+                    phone_no1: businessInfo.phone_no1,
+                    phone_no2: businessInfo.phone_no2,
+                    email_id: businessInfo.email_id,
+                    website_link: businessInfo.website_link,
+                    address: businessInfo.address
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || "Failed to create sale");
+            }
+
+            if(response.ok) {
                 console.log('Business information updated successfully!');
                 Swal.fire({
                     title: 'Success!',
@@ -54,17 +90,18 @@ const EditBusiness = () => {
                     icon: 'success',
                     confirmButtonText: 'Ok'
                 });
-                navigate("/Bussiness");
+                navigate("/Dashboard");
+            }
+        } catch(error) {
+            console.error(error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to update business information. Please try again later.',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'OK'
             })
-            .catch((error) => {
-                console.error('Error updating business information:', error);
-                Swal.fire({
-                    title: 'Error!',
-                    text: 'Error updating business information',
-                    icon: 'error',
-                    confirmButtonText: 'Ok'
-                });
-            });
+        }
     };
 
     return (
@@ -97,9 +134,9 @@ const EditBusiness = () => {
                         <div className="space-y-1.5">
                             <label className="block text-sm font-medium text-gray-700">Business Name</label>
                             <input 
-                                id="businessName" 
+                                id="business_name" 
                                 type="text" 
-                                value={businessInfo.businessName} 
+                                value={businessInfo.business_name} 
                                 onChange={handleChange} 
                                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm"
                                 placeholder="Enter business name"
@@ -111,48 +148,48 @@ const EditBusiness = () => {
                         <div className="space-y-1.5">
                             <label className="block text-sm font-medium text-gray-700">Primary Phone</label>
                             <input 
-                                id="phoneNumber1" 
+                                id="phone_no1" 
                                 type="text" 
-                                value={businessInfo.phoneNumber1} 
+                                value={businessInfo.phone_no1} 
                                 onChange={handleChange} 
                                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm"
-                                placeholder="+1 (234) 567-8900"
+                                placeholder="+91 (234) 567-8900"
                             />
                         </div>
                         <div className="space-y-1.5">
                             <label className="block text-sm font-medium text-gray-700">Secondary Phone</label>
                             <input 
-                                id="phoneNumber2" 
+                                id="phone_no2" 
                                 type="text" 
-                                value={businessInfo.phoneNumber2} 
+                                value={businessInfo.phone_no2} 
                                 onChange={handleChange} 
                                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm"
-                                placeholder="+1 (234) 567-8901"
+                                placeholder="+91 (234) 567-8901"
                             />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div className="space-y-1.5">
-                            <label className="block text-sm font-medium text-gray-700">Primary Website</label>
+                            <label className="block text-sm font-medium text-gray-700">Email ID</label>
                             <input 
-                                id="websiteName1" 
-                                type="text" 
-                                value={businessInfo.websiteName1} 
+                                id="email_id" 
+                                type="email" 
+                                value={businessInfo.email_id} 
                                 onChange={handleChange} 
                                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm"
-                                placeholder="https://www.example.com"
+                                placeholder="user@example.com"
                             />
                         </div>
                         <div className="space-y-1.5">
-                            <label className="block text-sm font-medium text-gray-700">Secondary Website</label>
+                            <label className="block text-sm font-medium text-gray-700">Primary Website</label>
                             <input 
-                                id="websiteName2" 
-                                type="text" 
-                                value={businessInfo.websiteName2} 
+                                id="website_link" 
+                                type="url" 
+                                value={businessInfo.website_link} 
                                 onChange={handleChange} 
                                 className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none text-sm"
-                                placeholder="https://store.example.com"
+                                placeholder="https://www.example.com"
                             />
                         </div>
                     </div>

@@ -16,8 +16,6 @@ const NewSale = () => {
     const [customerAddress, setCustomerAddress] = useState('');
     const [products, setProducts] = useState([]);
 
-    // Customer fetch removed as they are manually entered
-
     const fetch_products = async () => {
         try {
             const token = localStorage.getItem('access_token');
@@ -66,8 +64,6 @@ const NewSale = () => {
         setCurrentComponent(<Bill />);
         setShowContent(false);
     };
-
-    // Customer change removed
 
     const handleProductChange = (event, id) => {
         const selectedProductId = event.target.value;
