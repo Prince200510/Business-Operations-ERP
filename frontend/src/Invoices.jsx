@@ -13,7 +13,7 @@ const Invoices = () => {
     const fetchCustomers = async () => {
         try {
             const token = localStorage.getItem('access_token');
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/customers/`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/customers/`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (response.ok) {
@@ -28,7 +28,7 @@ const Invoices = () => {
     const fetchSales = async () => {
         try {
             const token = localStorage.getItem('access_token');
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/sales/`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/sales/`, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
@@ -65,7 +65,7 @@ const Invoices = () => {
         setSelectedInvoice(saleId);
         try {
             const token = localStorage.getItem('access_token');
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/sales/${saleId}/invoice`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/sales/${saleId}/invoice`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (response.ok) {

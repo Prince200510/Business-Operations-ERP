@@ -68,7 +68,7 @@ function App() {
   
     try {
       const response = await fetch(
-         `${process.env.REACT_APP_API_URL}/auth/login`,
+         `${import.meta.env.VITE_API_URL}/auth/login`,
          {
           method: 'POST',
           headers: {
@@ -122,7 +122,7 @@ function App() {
 
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/auth/register`,
+        `${import.meta.env.VITE_API_URL}/auth/register`,
         {
           method: 'POST',
           headers: {

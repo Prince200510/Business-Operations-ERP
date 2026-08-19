@@ -12,7 +12,7 @@ const HistorySale = () => {
     const fetchCustomers = async () => {
         try {
             const token = localStorage.getItem('access_token');
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/customers/`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/customers/`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (response.ok) {
@@ -27,7 +27,7 @@ const HistorySale = () => {
     const fetchProducts = async () => {
         try {
             const token = localStorage.getItem('access_token');
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/products/`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/products/`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (response.ok) {
@@ -42,7 +42,7 @@ const HistorySale = () => {
     const fetchSales = async () => {
         try {
             const token = localStorage.getItem('access_token');
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/sales/`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/sales/`, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`

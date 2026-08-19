@@ -18,7 +18,7 @@ const NewSale = () => {
     const fetch_products = async () => {
         try {
             const token = localStorage.getItem('access_token');
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/products/`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/products/`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -110,7 +110,7 @@ const NewSale = () => {
 
         try {
             const response = await fetch(
-                `${process.env.REACT_APP_API_URL}/sales/`,
+                `${import.meta.env.VITE_API_URL}/sales/`,
                 {
                     method: "POST",
                     headers: {

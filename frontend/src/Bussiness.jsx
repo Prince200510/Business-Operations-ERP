@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AiOutlineEnvironment, AiOutlineLink, AiOutlinePhone } from 'react-icons/ai';
-import EditBusiness from './EditBusiness.js';
+import EditBusiness from './EditBusiness';
 import { useNavigate } from 'react-router-dom';
 
 const Business = () => {
@@ -18,7 +18,7 @@ const Business = () => {
                 return;
             }
 
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/business/`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/business/`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 

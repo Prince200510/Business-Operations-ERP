@@ -26,7 +26,7 @@ const Product = () => {
         }
 
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/suppliers/`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/suppliers/`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -60,7 +60,7 @@ const Product = () => {
         }
 
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/products/`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/products/`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -119,7 +119,7 @@ const Product = () => {
         }
 
         try {
-            const response = await fetch( `${process.env.REACT_APP_API_URL}/products/`, {
+            const response = await fetch( `${import.meta.env.VITE_API_URL}/products/`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -187,7 +187,7 @@ const Product = () => {
         }
 
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/products/${productId}`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/products/${productId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`

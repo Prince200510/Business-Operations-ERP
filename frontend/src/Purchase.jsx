@@ -23,7 +23,7 @@ const Purchase = () => {
     const fetch_supplier = async () => {
         const token = localStorage.getItem('access_token');
 
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/suppliers/`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/suppliers/`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -46,7 +46,7 @@ const Purchase = () => {
     const fetch_products = async () => {
         const token = localStorage.getItem('access_token');
 
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/products/`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/products/`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -64,7 +64,7 @@ const Purchase = () => {
         const token = localStorage.getItem('access_token');
         if(!token) return;
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/purchases/`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/purchases/`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if(response.ok) {
@@ -146,7 +146,7 @@ const Purchase = () => {
         }
 
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/purchases/`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/purchases/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -216,7 +216,7 @@ const Purchase = () => {
         }
 
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/purchases/${purchaseId}/add-to-inventory`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/purchases/${purchaseId}/add-to-inventory`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -25,7 +25,7 @@ const EditBusiness = () => {
                 return;
             }
 
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/business/`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/business/`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
@@ -59,7 +59,7 @@ const EditBusiness = () => {
         }
 
         try {
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/business/`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/business/`, {
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json",

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, Filler} from 'chart.js';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, Filler } from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, Filler);
 
@@ -24,7 +24,7 @@ const Report1 = () => {
                 return;
             }
 
-            const response = await fetch(`${process.env.REACT_APP_API_URL}/reports/dashboard`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/reports/dashboard`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -63,7 +63,7 @@ const Report1 = () => {
             const token = localStorage.getItem('access_token');
             if(!token) return;
             
-            await fetch(`${process.env.REACT_APP_API_URL}/reports/dashboard/refresh`, {
+            await fetch(`${import.meta.env.VITE_API_URL}/reports/dashboard/refresh`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`

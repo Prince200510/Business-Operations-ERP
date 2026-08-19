@@ -1,5 +1,4 @@
 import { useLocation, Navigate, useNavigate, Link, Route, Routes, Outlet } from 'react-router-dom';
-
 import { AiOutlineSearch, AiOutlineDown } from 'react-icons/ai';
 import { FaPalette, FaNewspaper, FaTruck, FaBox } from 'react-icons/fa';
 import { IoCartOutline, IoPeopleOutline, IoSettingsOutline } from 'react-icons/io5';
@@ -8,10 +7,10 @@ import Report1 from './Report1';
 import Supplier from './Supplier';
 import Product from './Product';
 import Purchase from './Purchase';
-import NewSale from './NewSale.js';
+import NewSale from './NewSale';
 import HistorySale from './HistorySale';
-import Bussiness from './Bussiness.js';
-import Invoices from './Invoices.js';
+import Bussiness from './Bussiness';
+import Invoices from './Invoices';
 
 const Dashboard = () => {
     const location = useLocation();
