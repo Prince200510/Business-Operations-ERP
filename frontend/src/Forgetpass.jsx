@@ -1,7 +1,5 @@
 import react, {useState} from 'react';
 import { Link, useNavigate, Route, Routes } from 'react-router-dom';
-import { ref, set, get } from "firebase/database";
-import database from './firebase';
 
 const Forgetpass = () => {
     const navigate = useNavigate();
