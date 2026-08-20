@@ -11,6 +11,7 @@ import NewSale from './NewSale';
 import HistorySale from './HistorySale';
 import Bussiness from './Bussiness';
 import Invoices from './Invoices';
+import Expenses from './Expenses';
 
 const Dashboard = () => {
     const location = useLocation();
@@ -130,6 +131,11 @@ const Dashboard = () => {
                         <div className={getNavItemClass('invoices')} onClick={() => handleNavigation('invoices', <Invoices />)}>
                             <span className={getIconClass('invoices')}>description</span>
                             <span className="font-body-md text-[13px]">Invoices</span>
+                        </div>
+                        
+                        <div className={getNavItemClass('expenses')} onClick={() => handleNavigation('expenses', <Expenses />)}>
+                            <span className={getIconClass('expenses')}>account_balance_wallet</span>
+                            <span className="font-body-md text-[13px]">Expenses</span>
                         </div>
                         
                         <div className={getNavItemClass('purchases')} onClick={() => handleNavigation('purchases', <Purchase />)}>
