@@ -194,9 +194,8 @@ const Product = () => {
                 }
             });
 
-            const data = await response.json();
-
             if(!response.ok) {
+                const data = await response.json().catch(() => ({}));
                 throw new Error(data.detail || 'Failed to delete product');
             }
 

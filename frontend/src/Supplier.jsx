@@ -158,8 +158,6 @@ const Supplier = () => {
                 }
             });
 
-            const data = await response.json();
-
             if(response.status === 401) {
                 localStorage.removeItem('access_token');
                 localStorage.removeItem('loggedInUser');
@@ -168,6 +166,7 @@ const Supplier = () => {
             }
 
             if(!response.ok) {
+                const data = await response.json().catch(() => ({}));
                 throw new Error(data.detail || 'Failed to delete supplier');
             }
 

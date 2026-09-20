@@ -21,6 +21,7 @@ const Dashboard = () => {
     const username = location?.state?.userName || (storedUser && storedUser.username);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isDropdownOpen1, setIsDropdownOpen1] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const toggleDropdown = () => {
         setIsDropdownOpen(!isDropdownOpen);
@@ -73,15 +74,9 @@ const Dashboard = () => {
                 <div className="flex items-center gap-gutter">
                     <div className="relative hidden md:block w-64">
                         <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
-                        <input className="w-full h-8 pl-9 pr-3 bg-surface-container-low border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary font-body-sm text-on-surface placeholder:text-on-surface-variant transition-all outline-none" placeholder="Search operations..." type="text"/>
+                        <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full h-8 pl-9 pr-3 bg-surface-container-low border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary font-body-sm text-on-surface placeholder:text-on-surface-variant transition-all outline-none" placeholder="Search operations..." type="text"/>
                     </div>
                     <div className="flex items-center gap-2">
-                        <button className="p-2 text-on-surface-variant hover:bg-surface-container transition-colors rounded-full flex items-center justify-center">
-                            <span className="material-symbols-outlined text-[20px]">notifications</span>
-                        </button>
-                        <button className="p-2 text-on-surface-variant hover:bg-surface-container transition-colors rounded-full flex items-center justify-center">
-                            <span className="material-symbols-outlined text-[20px]">help</span>
-                        </button>
                     </div>
                     <div className="h-8 w-px bg-outline-variant mx-2"></div>
                     <div className="flex items-center gap-3 cursor-pointer opacity-80 transition-all hover:opacity-100" onClick={handleLogout}>
@@ -158,7 +153,7 @@ const Dashboard = () => {
                 </aside>
                 <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background md:ml-64 w-full h-full">
                     <div className="w-full h-full">
-                        {currentComponent}
+                        {React.cloneElement(currentComponent, { searchTerm })}
                     </div>
                 </main>
             </div>

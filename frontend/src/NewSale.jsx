@@ -4,7 +4,6 @@ import Swal from 'sweetalert2';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const NewSale = () => {
-    const location = useLocation();
     const navigate = useNavigate();
     const [currentComponent, setCurrentComponent] = useState();
     const [showContent, setShowContent] = useState(true);
@@ -318,7 +317,7 @@ const NewSale = () => {
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <label className="text-sm font-medium text-gray-600">Discount</label>
-                                        <input type="number" value={discount} onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)} className="w-32 px-3 py-1.5 border border-gray-200 rounded focus:ring-2 focus:ring-primary-500 outline-none text-sm text-right bg-white" placeholder="0.00" />
+                                        <input type="number" value={discount} onChange={(e) => setDiscount(parseFloat(e.target.value) || 0.0)} className="w-32 px-3 py-1.5 border border-gray-200 rounded focus:ring-2 focus:ring-primary-500 outline-none text-sm text-right bg-white" placeholder="0.00" />
                                     </div>
                                     <div className="pt-4 flex gap-3">
                                         <button 

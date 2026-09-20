@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.redis import get_redis
@@ -13,12 +14,12 @@ def register(request: Register, db: Session = Depends(get_db)):
     existing_user = (db.query(User).filter(User.username == request.username).first())
     
     if existing_user:
-        raise HTTPException(status_code=409, detail = "Username is already exists")
+        raise HTTPException(status_code = 409, detail = "Username is already exists")
     
     existing_email = (db.query(User).filter(User.email == request.email).first())
     
     if existing_email:
-        raise HTTPException(status_code=409, detail = "Email id already registered")
+        raise HTTPException(status_code = 409, detail = "Email id already registered")
     
     hashed_password = hash_password(request.password)
     user = User(
@@ -76,3 +77,27 @@ def login(request: Login, db: Session = Depends(get_db)):
             "email": user.email
         }
     }
+
+@router.post("/token")
+def token(request: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    redis = get_redis()
+    attempts_key = f"login_attempts:{request.username}"
+    attempts = redis.get(attempts_key)
+
+    if attempts and int(attempts) >= 5:
+        raise HTTPException(status_code=429, detail="Too many login attempts. Try again later.")
+
+    user = db.query(User).filter(User.username == request.username).first()
+
+    if not user or not verify_password(request.password, user.password_hash):
+        redis.incr(attempts_key)
+        redis.expire(attempts_key, 300)
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    redis.delete(attempts_key)
+    access_token = create_access_token(data={
+        "sub": str(user.id),
+        "username": user.username
+    })
+
+    return {"access_token": access_token, "token_type": "bearer"}

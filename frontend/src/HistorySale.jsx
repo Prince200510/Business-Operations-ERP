@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AiOutlineDelete } from 'react-icons/ai';
 import { Link, useNavigate } from 'react-router-dom';
 
-const HistorySale = () => {
+const HistorySale = ({ searchTerm = "" }) => {
     const [sales, setSales] = useState([]);
     const [customers, setCustomers] = useState([]);
     const [products, setProducts] = useState([]);
@@ -83,8 +83,6 @@ const HistorySale = () => {
         }
     };
 
-    const filteredSales = filterSalesByMonth(sales, selectedMonth);
-
     const getCustomerName = (customerId) => {
         const cust = customers.find(c => c.id === customerId);
         return cust ? cust.name : `Unknown (ID: ${customerId})`;
@@ -94,6 +92,13 @@ const HistorySale = () => {
         const prod = products.find(p => p.id === productId);
         return prod ? prod.name : `Unknown (ID: ${productId})`;
     };
+
+    const filteredSales = filterSalesByMonth(sales, selectedMonth).filter(sale => {
+        if (!searchTerm) return true;
+        const searchLower = searchTerm.toLowerCase();
+        const customerName = getCustomerName(sale.customer_id).toLowerCase();
+        return customerName.includes(searchLower) || (sale.payment_method || '').toLowerCase().includes(searchLower);
+    });
 
     return (
         <div className="flex-1 overflow-y-auto p-container-margin w-full bg-background font-body-md text-on-background">

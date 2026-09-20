@@ -4,7 +4,7 @@ from jose import JWTError, jwt
 from app.core.config import settings
 from app.core.security import algorithms
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "/api/v1/auth/token")
 
 def get_current_user_id(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
