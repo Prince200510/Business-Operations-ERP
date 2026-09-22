@@ -42,5 +42,5 @@ app.include_router(expense_router)
 @app.get("/")
 def root():
     return {
-        "message": "Nexora API is running"
+        "message": "API is running"
     }
