@@ -10,4 +10,15 @@ class Register(BaseModel):
 class Login(BaseModel):
     username: str
     password: str
-    
+
+class ForgotPasswordRequest(BaseModel):
+    username: str
+
+class VerifyOTPRequest(BaseModel):
+    username: str
+    otp: str
+
+class ResetPasswordRequest(BaseModel):
+    username: str
+    otp: str
+    new_password: str = Field(min_length=8)

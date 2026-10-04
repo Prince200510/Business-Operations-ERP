@@ -9,7 +9,7 @@ router = APIRouter(prefix = "/api/v1/customers", tags = ["Customers"])
 
 @router.post("/", response_model = CustomerResponse, status_code = 201)
 def create_customer(customer_data: CustomerCreate, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
-    customer = Customer(user_id = user_id, name = customer_data.name, address = customer_data.address)
+    customer = Customer(user_id = user_id, name = customer_data.name, email = customer_data.email, phone = customer_data.phone, address = customer_data.address)
     db.add(customer)
     db.commit()
     db.refresh(customer)

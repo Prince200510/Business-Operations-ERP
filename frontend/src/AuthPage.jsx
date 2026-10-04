@@ -10,36 +10,7 @@ function AuthPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
-  const [generatedPassword, setGeneratedPassword] = useState('');
-  const [copyButtonText, setCopyButtonText] = useState('Copy');
   const navigate = useNavigate();
-
-  useEffect(() => {
-    generatePassword();
-  }, []);
-
-  const generatePassword = () => {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-    let generated = '';
-    for (let i = 0; i < 8; i++) {
-      const randomIndex = Math.floor(Math.random() * characters.length);
-      generated += characters[randomIndex];
-    }
-    setGeneratedPassword(generated);
-  };
-
-  const handleCopyPasscode = () => {
-    navigator.clipboard.writeText(generatedPassword)
-      .then(() => {
-        setCopyButtonText('Copied!');
-        setTimeout(() => {
-          setCopyButtonText('Copy Passcode');
-        }, 2000);
-      })
-      .catch((error) => {
-        console.error('Error copying passcode:', error);
-      });
-  };
 
   const handleLogin = async () => {
     setErrorMessage('');
@@ -231,13 +202,6 @@ function AuthPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Password <span className="text-red-500">*</span></label>
                   <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors outline-none" placeholder="••••••••" required />
-                </div>
-                <div className="bg-blue-50/50 p-4 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-blue-100">
-                  <div>
-                    <p className="text-xs text-blue-800 font-medium mb-1 uppercase tracking-wider">Recovery Passcode</p>
-                    <p className="text-lg font-mono text-blue-900 tracking-wide font-bold">{generatedPassword}</p>
-                  </div>
-                  <button onClick={handleCopyPasscode} className="px-4 py-2 bg-white text-blue-600 text-sm font-medium rounded-md shadow-sm border border-blue-200 hover:bg-blue-50 transition-colors whitespace-nowrap">{copyButtonText}</button>
                 </div>
                 <button onClick={handleSignUp} className="w-full py-3 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg shadow-sm transition-colors mt-6">Register</button>
                 <p className="text-center text-sm text-gray-600 mt-4">Already have an account? <span className="text-primary-600 font-medium cursor-pointer hover:underline" onClick={handleSignIn}>Sign In</span></p>

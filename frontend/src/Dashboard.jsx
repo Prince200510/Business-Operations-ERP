@@ -12,6 +12,9 @@ import HistorySale from './HistorySale';
 import Bussiness from './Bussiness';
 import Invoices from './Invoices';
 import Expenses from './Expenses';
+import Customers from './Customers';
+import Leads from './Leads';
+import SupportTickets from './SupportTickets';
 
 const Dashboard = () => {
     const location = useLocation();
@@ -139,8 +142,25 @@ const Dashboard = () => {
                         </div>
                         
                         <div className={getNavItemClass('suppliers')} onClick={() => handleNavigation('suppliers', <Supplier />)}>
-                            <span className={getIconClass('suppliers')}>groups</span>
+                            <span className={getIconClass('suppliers')}>local_shipping</span>
                             <span className="font-body-md text-[13px]">Suppliers</span>
+                        </div>
+                        
+                        <div className="my-2 border-t border-outline-variant mx-2"></div>
+
+                        <div className={getNavItemClass('customers')} onClick={() => handleNavigation('customers', <Customers />)}>
+                            <span className={getIconClass('customers')}>groups</span>
+                            <span className="font-body-md text-[13px]">Customers</span>
+                        </div>
+
+                        <div className={getNavItemClass('leads')} onClick={() => handleNavigation('leads', <Leads />)}>
+                            <span className={getIconClass('leads')}>leaderboard</span>
+                            <span className="font-body-md text-[13px]">Leads</span>
+                        </div>
+
+                        <div className={getNavItemClass('support_tickets')} onClick={() => handleNavigation('support_tickets', <SupportTickets />)}>
+                            <span className={getIconClass('support_tickets')}>support_agent</span>
+                            <span className="font-body-md text-[13px]">Support Tickets</span>
                         </div>
 
                         <div className="my-2 border-t border-outline-variant mx-2"></div>

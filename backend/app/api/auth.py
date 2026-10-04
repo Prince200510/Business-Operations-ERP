@@ -1,11 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import or_
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.redis import get_redis
 from app.core.security import (hash_password, verify_password, create_access_token)
 from app.modules.user import User
-from app.schemas.auth import (Register, Login)
+from app.schemas.auth import (Register, Login, ForgotPasswordRequest, VerifyOTPRequest, ResetPasswordRequest)
+import urllib.request
+import json
+from app.core.config import settings
+import random
 
 router = APIRouter(prefix = "/api/v1/auth", tags = ["Authenication"])
 
@@ -101,3 +106,100 @@ def token(request: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(
     })
 
     return {"access_token": access_token, "token_type": "bearer"}
+
+def send_emailjs(to_email: str, username: str, otp: str):
+    service_id = settings.EMAILJS_SERVICE_ID
+    template_id = settings.EMAILJS_TEMPLATE_ID
+    user_id = settings.EMAILJS_PUBLIC_KEY
+    access_token = settings.EMAILJS_PRIVATE_KEY
+    
+    if not all([service_id, template_id, user_id]):
+        return False, "Missing EmailJS credentials in .env"
+        
+    url = "https://api.emailjs.com/api/v1.0/email/send"
+    data = {
+        "service_id": service_id,
+        "template_id": template_id,
+        "user_id": user_id,
+        "accessToken": access_token,
+        "template_params": {
+            "to_name": username,
+            "to_email": to_email,
+            "otp": otp
+        }
+    }
+    
+    req = urllib.request.Request(
+        url, 
+        data=json.dumps(data).encode('utf-8'), 
+        headers={
+            'Content-Type': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+    )
+    try:
+        urllib.request.urlopen(req)
+        return True, ""
+    except urllib.error.HTTPError as e:
+        err = e.read().decode()
+        print(f"EmailJS Error: {err}")
+        return False, err
+    except Exception as e:
+        print(f"EmailJS Exception: {e}")
+        return False, str(e)
+
+@router.post("/forgot-password")
+def forgot_password(request: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(or_(User.username == request.username, User.email == request.username)).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    redis = get_redis()
+    cooldown_key = f"otp_cooldown:{user.username}"
+    
+    if redis.exists(cooldown_key):
+        ttl = redis.ttl(cooldown_key)
+        raise HTTPException(status_code=429, detail=f"Please wait {ttl} seconds before requesting a new OTP")
+        
+    otp = str(random.randint(100000, 999999))
+    redis.setex(f"pwd_reset:{user.username}", 300, otp)
+    redis.setex(cooldown_key, 60, "1")
+    
+    success, err_msg = send_emailjs(user.email, user.username, otp)
+    if not success:
+        raise HTTPException(status_code=500, detail=f"Failed to send email: {err_msg}")
+    
+    return {"message": "OTP sent to registered email", "username": user.username}
+
+@router.post("/verify-otp")
+def verify_otp(request: VerifyOTPRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(or_(User.username == request.username, User.email == request.username)).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    redis = get_redis()
+    stored_otp = redis.get(f"pwd_reset:{user.username}")
+    
+    if not stored_otp or stored_otp != request.otp:
+        raise HTTPException(status_code=400, detail="Invalid or expired OTP")
+        
+    return {"message": "OTP verified successfully", "username": user.username}
+
+@router.post("/reset-password")
+def reset_password(request: ResetPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(or_(User.username == request.username, User.email == request.username)).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    redis = get_redis()
+    stored_otp = redis.get(f"pwd_reset:{user.username}")
+    
+    if not stored_otp or stored_otp != request.otp:
+        raise HTTPException(status_code=400, detail="Invalid or expired OTP")
+        
+    user.password_hash = hash_password(request.new_password)
+    db.commit()
+    
+    redis.delete(f"pwd_reset:{user.username}")
+    
+    return {"message": "Password reset successful"}
